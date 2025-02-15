@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- require stylesheet : bootstrap.css -->
+    <link rel="stylesheet" href="bootstrap.css">
+    <!-- require stylesheet : printings.css -->
+    <link rel="stylesheet" href="printings.css">
+    <!-- require stylesheet : template2.css -->
+    <link rel="stylesheet" href="template2.css">
+</head>
+
+<body>
+    <header class="clearfix">
+        <div id="logo">
+            <img src="<%= logo %>">
+        </div>
+        <div id="company">
+            <h2 class="name">
+                <%= quotation.cabinet.enterpriseName %>
+            </h2>
+            <div>
+                <%= quotation.cabinet.address.address %>, <%= quotation.cabinet.address.zipcode %>
+                        <%= quotation.cabinet.address.region %>, <%= quotation.cabinet.address.country.alpha2code %>
+            </div>
+            <div>
+                <%= quotation.cabinet.phone %>
+            </div>
+            <div><a href="mailto:<%= quotation.cabinet.email %>">
+                    <%= quotation.cabinet.email %>
+                </a></div>
+        </div>
+        </div>
+    </header>
+    <main>
+        <div id="details" class="clearfix">
+            <div id="client">
+                <h2>
+                    <%= quotation.firm.name %>
+                </h2>
+                <% if (meta.showDeliveryAddress ) { %>
+                    <p>
+                        <strong>Adresse de Livraison</strong><br>
+                        <%= quotation.firm.deliveryAddress.address %>
+                            <br><span>
+                                <%= quotation.firm.deliveryAddress.zipcode %>
+                                    <%= quotation.firm.deliveryAddress.region %>
+                                        <%= quotation.firm.deliveryAddress.country.alpha2code %>
+                            </span>
+                    </p>
+                    <% } %>
+                        <% if (meta.showInvoiceAddress ) { %>
+
+                            <p>
+                                <strong>Adresse de Facturation</strong><br>
+                                <%= quotation.firm.invoicingAddress.address %>
+                                    <br> <span>
+                                        <%= quotation.firm.invoicingAddress.zipcode %>
+                                            <%= quotation.firm.invoicingAddress.region %>
+                                                <%= quotation.firm.invoicingAddress.country.alpha2code %>
+                                    </span>
+                            </p>
+                            <% } %>
+            </div>
+            <div id="invoice">
+                <h1 id="document-type">
+                    <%= meta.type %> N° <%= quotation.sequential %>
+                </h1>
+                <div><strong>Date: </strong>
+                    <%= quotation.date %>
+                </div>
+                <div><strong>Échéance:</strong>
+                    <%= quotation.dueDate %>
+                </div>
+                <div><strong>Objet :</strong>
+                    <%= quotation.object %>
+                </div>
+
+            </div>
+        </div>
+        <table class="table table-striped" cellspacing="0" cellpadding="0">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 10%;">Nom</th>
+                    <th style="width: 15%;">Description</th>
+                    <th style="width: 10%;">Quantité</th>
+                    <th style="width: 10%;">P.U</th>
+                    <th style="width: 10%;">Remise</th>
+                    <th style="width: 10%;">HT</th>
+                    <th style="width: 20%;">Taxes</th>
+                    <th style="width: 10%;">TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% let counter=1; %>
+                    <% quotation.articleQuotationEntries.forEach(function(entry) { %>
+                        <tr>
+                            <td class="no"># <%= counter %>
+                            </td>
+                            <td>
+                                <%= entry.article.title %>
+                            </td>
+                            <td>
+                                <%= entry.article.description %>
+                            </td>
+                            <td class="qty">
+                                <%= entry.quantity %>
+                            </td>
+                            <td class="unit">
+                                <%= entry.unit_price %>
+                                    <%= quotation.currency.symbol %>
+                            </td>
+                            <td>
+                                <%= entry.discount %>
+                                    <% if (entry.discount_type=="PERCENTAGE" ) { %>
+                                        <span>%</span>
+                                        <% } else { %>
+                                            <span>
+                                                <%= quotation.currency.symbol %>
+                                            </span>
+                                            <% } %>
+                            </td>
+                            <td>
+                                <%= entry.subTotal %>
+                                    <%= quotation.currency.symbol %>
+                            </td>
+
+                            <td>
+                                <% if (entry.articleQuotationEntryTaxes.length> 0) { %>
+                                    <ul>
+                                        <% entry.articleQuotationEntryTaxes.forEach(function(taxEntry) { %>
+
+                                            <li>
+                                                <%= taxEntry.tax.label %>
+                                                    (<%= taxEntry.tax.rate * 100 %> %)
+                                            </li>
+
+                                            <% }); %>
+                                    </ul>
+                                    <% } else { %>
+                                        <span>
+                                            Aucune taxe applicable
+                                        </span>
+                                        <% } %>
+                            </td>
+                            <td class="total">
+                                <%= entry.total %>
+                                    <%= quotation.currency.symbol %>
+                            </td>
+                        </tr>
+                        <% counter++; %>
+                            <% }); %>
+            </tbody>
+        </table>
+        <table class="table table striped synth no-page-break">
+            <tr>
+                <td>Total HT</td>
+                <td class="text-right">
+                    <%= quotation.subTotal %>
+                        <%= quotation.currency.symbol %>
+                </td>
+            </tr>
+            <% quotation.taxSummary.forEach(function(tax) { %>
+                <tr>
+                    <td>
+                        <%= tax.label %> (<%= tax.rate %> %)
+                    </td>
+                    <td class="text-right">
+                        <%= tax.amount.toFixed(quotation.currency.digitAfterComma) %>
+                            <%= quotation.currency.symbol %>
+                    </td>
+                </tr>
+                <% }) %>
+
+                    <tr>
+                        <td>Remise</td>
+                        <td class="text-right">
+                            <%= quotation.discount %>
+                                <% if (quotation.discount_type=="PERCENTAGE" ) { %>
+                                    %
+                                    <% } else { %>
+                                        <%= quotation.currency.symbol %>
+                                            <% } %>
+                        </td>
+                    </tr>
+                    <% if (quotation.taxStamp) { %>
+                        <tr>
+                            <td>Timbre Fiscale</td>
+                            <td class="text-right">
+                                <%= quotation.taxStamp %>
+                                    <%= quotation.currency.symbol %>
+                            </td>
+                        </tr>
+                        <% }%>
+                            <tr>
+                                <td>Montant à payer</td>
+                                <td class="text-right">
+                                    <%= quotation.total %>
+                                        <%= quotation.currency.symbol %>
+                                </td>
+                            </tr>
+        </table>
+        <div class="row mt-5 no-page-break">
+            <div id="notices" class="col-8">
+                <h4>Conditions Générales:</h4>
+                <div class="notice">
+                    <%= quotation.generalConditions %>
+                </div>
+            </div>
+
+            <div class="col-4 border h-10 text-center" id="signature">
+                <strong>Cachet & Signature</strong>
+            </div>
+        </div>
+    </main>
+    <footer>
+    </footer>
+</body>
+
+</html>

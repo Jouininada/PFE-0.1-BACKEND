@@ -1,0 +1,158 @@
+.clearfix:after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+a {
+  color: #25306e;
+  text-decoration: none;
+}
+
+body {
+  padding: 1cm;
+  margin: 0.1cm;
+  color: #555555;
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-family: SourceSansPro;
+  position: relative;
+  min-height: 90vh;
+  max-height: 99vh;
+}
+
+main {
+  margin-bottom: 1cm;
+}
+
+header {
+  padding: 10px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #aaaaaa;
+}
+
+#logo {
+  float: left;
+  margin-top: -10px;
+}
+
+#logo img {
+  height: 70px;
+}
+
+#company {
+  float: right;
+  text-align: right;
+}
+
+#details {
+  margin-bottom: 50px;
+}
+
+#client {
+  padding-left: 6px;
+  border-left: 6px solid #fbd754;
+  float: left;
+}
+
+#client .to {
+  color: #25306e;
+}
+
+h2.name {
+  font-size: 1.4em;
+  font-weight: normal;
+  margin: 0;
+}
+
+#invoice {
+  float: right;
+  text-align: right;
+}
+
+#document-type {
+  color: #fbd754;
+  font-size: 2.4em;
+  margin: 0 0 10px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-left: 10px;
+}
+
+table th,
+table td {
+  padding: 0.5cm;
+  padding-top: 0;
+  background: #eeeeee;
+  border-bottom: 1px solid #ffffff;
+}
+table th {
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+table td h3 {
+  color: #fbd754;
+  font-size: 1.2em;
+  font-weight: normal;
+  margin: 0 0 0.2em 0;
+}
+
+table .no {
+  color: #ffffff;
+  font-size: 1.2em;
+  background: #fbd754;
+}
+
+table .total {
+  background: #fbd754;
+  color: #ffffff;
+}
+
+table td {
+  font-size: 0.9em;
+}
+
+table tbody tr:last-child td {
+  border: none;
+}
+
+.synth {
+  margin-left: auto;
+  width: 50%;
+}
+
+.synth td {
+  padding: 10px 20px;
+  background: #ffffff;
+  font-size: 0.9em;
+}
+
+.synth tr:last-child td {
+  border-top: 2px solid black;
+}
+
+.synth tr td:first-child {
+  border: none;
+}
+
+#notices {
+  padding-left: 6px;
+  border-left: 6px solid #fbd754;
+  margin: auto;
+}
+
+#notices .notice {
+  color: gray;
+  font-size: 1em !important;
+}
+
+#signature {
+  height: 200px;
+}
+

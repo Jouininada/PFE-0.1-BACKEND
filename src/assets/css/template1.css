@@ -1,0 +1,121 @@
+.clearfix:after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+a {
+  color: #5d6975;
+  text-decoration: underline;
+}
+
+body {
+  padding: 1cm;
+  margin: 0.1cm;
+  color: #555555;
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-family: SourceSansPro;
+  position: relative;
+  min-height: 90vh;
+  max-height: 99vh;
+}
+
+main {
+  margin-bottom: 1cm;
+}
+
+header {
+  padding: 10px 0;
+  margin-bottom: 30px;
+}
+
+#logo {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+#logo img {
+  width: 90px;
+}
+
+#document-type {
+  color: #fbd754;
+  font-size: 2.4em;
+  margin: 0 0 10px 0;
+}
+
+h1 {
+  border-top: 1px solid #5d6975;
+  border-bottom: 1px solid #5d6975;
+  color: #5d6975;
+  font-size: 2.4em;
+  line-height: 1.4em;
+  font-weight: normal;
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+
+#project {
+  float: left;
+}
+
+#project span {
+  color: #5d6975;
+  text-align: right;
+  text-decoration: underline;
+  font-weight: bold;
+  font-size: 0.8em;
+}
+
+#company {
+  float: right;
+  text-align: right;
+}
+
+#project div,
+#company div {
+  white-space: nowrap;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-left: 10px;
+}
+
+table th,
+table td {
+  text-align: center;
+}
+
+table th {
+  font-size: 1em;
+  padding: 0.2cm;
+  color: #5d6975;
+  border-bottom: 1px solid #c1ced9;
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+table td {
+  padding: 0.2cm;
+  font-size: 0.9em;
+  text-align: right;
+}
+
+
+table td.grand {
+  border-top: 1px solid #5d6975;
+}
+
+#notices .notice {
+  color: gray;
+  font-size: 1em !important;
+}
+
+#signature {
+  height: 200px;
+}

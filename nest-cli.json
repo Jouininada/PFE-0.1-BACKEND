@@ -1,0 +1,27 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "plugins": ["@nestjs/swagger"],
+    "assets": [
+      {
+        "include": "i18n/**/*",
+        "watchAssets": true,
+        "outDir": "dist"
+      },
+      {
+        "include": "assets/**/*",
+        "watchAssets": true,
+        "outDir": "dist"
+      },
+      {
+        "include": "migrations/*",
+        "watchAssets": true,
+        "outDir": "dist"
+      }
+    ],
+    "webpack": false,
+    "deleteOutDir": true,
+    "watchAssets": false
+  }
+}

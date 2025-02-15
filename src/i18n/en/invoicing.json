@@ -1,0 +1,15 @@
+{
+  "common": {},
+  "quotation": {
+    "status": {
+      "accepted": "Accepted",
+      "draft": "Draft",
+      "expired": "Expired",
+      "non_existent": "Non-Existent",
+      "sent": "Sent",
+      "rejected": "Rejected",
+      "validated": "Validated"
+    }
+  },
+  "invoice": {}
+}

@@ -1,0 +1,15 @@
+{
+  "common": {},
+  "quotation": {
+    "status": {
+      "accepted": "Accepté",
+      "draft": "Broullion",
+      "expired": "Expiré",
+      "non_existent": "Inexistante",
+      "sent": "Envoyé",
+      "rejected": "Rejeté",
+      "validated": "Validé"
+    }
+  },
+  "invoice": {}
+}

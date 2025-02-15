@@ -1,0 +1,54 @@
+/* eslint-disable prettier/prettier */
+import { Module } from '@nestjs/common';
+import { ExpensQuotationService } from './services/expensquotation.service';
+import { ArticleExpensQuotationEntryService } from './services/article-expensquotation-entry.service';
+import { ArticleExpensQuotationEntryTaxService } from './services/article-expensquotation-entry-tax.service';
+import { PdfModule } from 'src/common/pdf/pdf.module';
+import { CalculationsModule } from 'src/common/calculations/calculations.module';
+import { AppConfigModule } from 'src/common/app-config/app-config.module';
+import { ExpensQuotationSequenceService } from './services/expensquotation-sequence.service';
+import { GatewaysModule } from 'src/common/gateways/gateways.module';
+import { ExpensQuotationMetaDataService } from './services/expensquotation-meta-data.service';
+import { StorageModule } from 'src/common/storage/storage.module';
+import { ExpensQuotationUploadService } from './services/expensquotation-upload.service';
+import { ArticleModule } from 'src/modules/article/article.module';
+import { BankAccountModule } from 'src/modules/bank-account/bank-account.module';
+import { CurrencyModule } from 'src/modules/currency/currency.module';
+import { FirmModule } from 'src/modules/firm/firm.module';
+import { InterlocutorModule } from 'src/modules/interlocutor/Interlocutor.module';
+import { InvoiceModule } from 'src/modules/invoice/invoice.module';
+import { TaxModule } from 'src/modules/tax/tax.module';
+import { ExpensQuotationController } from './controllers/expensquotation.controller';
+import { QuotationRepositoryModule } from './repositories/expensquotation.repository.module';
+
+@Module({
+  controllers: [ExpensQuotationController], // Ajout du contrôleur ici
+  providers: [
+    ExpensQuotationService,
+    ExpensQuotationMetaDataService,
+    ExpensQuotationUploadService,
+    ExpensQuotationSequenceService,
+    ArticleExpensQuotationEntryService,
+    ArticleExpensQuotationEntryTaxService,
+  ],
+  exports: [ExpensQuotationService],
+  imports: [
+    //repositories
+    QuotationRepositoryModule,
+    //entities
+    ArticleModule,
+    AppConfigModule,
+    BankAccountModule,
+    CurrencyModule,
+    FirmModule,
+    InterlocutorModule,
+    InvoiceModule,
+    TaxModule,
+    //abstract modules
+    PdfModule,
+    GatewaysModule,
+    CalculationsModule,
+    StorageModule,
+  ],
+})
+export class ExpenseQuotationModule {}

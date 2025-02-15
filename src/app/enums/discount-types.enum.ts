@@ -1,0 +1,4 @@
+export enum DISCOUNT_TYPES {
+  PERCENTAGE = 'PERCENTAGE',
+  AMOUNT = 'AMOUNT',
+}

@@ -1,0 +1,42 @@
+@media print {
+  .page-break {
+    page-break-before: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  table {
+    margin: 1cm 0 1cm 0;
+    page-break-inside: auto;
+  }
+  tr {
+    row-gap: 1cm;
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
+
+@page {
+  margin-top: 1cm;
+  margin-bottom: 1cm;
+}
+
+@page:first {
+  margin-top: 0;
+}
