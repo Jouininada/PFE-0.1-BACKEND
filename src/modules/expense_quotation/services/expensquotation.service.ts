@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, StreamableFile } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
 import { ExpensQuotationEntity } from '../repositories/entities/expensquotation.entity';
 import { QuotationNotFoundException } from '../errors/quotation.notfound.error';
 import { ResponseExpensQuotationDto } from '../dtos/expensquotation.response.dto';
@@ -26,6 +26,10 @@ import { ExpensQuotationUploadService } from './expensquotation-upload.service';
 import { ExpensequotationRepository } from '../repositories/repository/expensquotation.repository';
 import { EXPENSQUOTATION_STATUS } from '../enums/expensquotation-status.enum';
 import { Transactional } from '@nestjs-cls/transactional';
+import { DuplicateExpensQuotationDto } from '../dtos/expensquotation.duplicate.dto';
+import { ExpensQuotationMetaDataEntity } from '../repositories/entities/expensquotation-meta-data.entity';
+import { QUOTATION_STATUS } from 'src/modules/quotation/enums/quotation-status.enum';
+import { StorageBadRequestException } from 'src/common/storage/errors/storage.bad-request.error';
 
 
 @Injectable()
@@ -158,13 +162,9 @@ export class ExpensQuotationService {
     });
   
     return new PageDto(dtos, pageMetaDto);
-  }
-
-
-
-  @Transactional()
+  }@Transactional()
   async save(createQuotationDto: CreateExpensQuotationDto): Promise<ExpensQuotationEntity> {
-    // Parallelize fetching firm, bank account, and currency
+    // Parallelize fetching firm, bank account, and currency, as they are independent
     const [firm, bankAccount, currency] = await Promise.all([
       this.firmService.findOneByCondition({
         filter: `id||$eq||${createQuotationDto.firmId}`,
@@ -178,30 +178,52 @@ export class ExpensQuotationService {
     ]);
   
     if (!firm) {
-      throw new Error('Firm not found');
+      throw new Error('Firm not found'); // Handle firm not existing
     }
   
     // Check interlocutor existence
     await this.interlocutorService.findOneById(createQuotationDto.interlocutorId);
+  
+    // Log and validate article entries
+    if (createQuotationDto.articleQuotationEntries) {
+      createQuotationDto.articleQuotationEntries.forEach((entry, index) => {
+        console.log(`Entry at index ${index}:`, entry); // Log the entry to help with debugging
+  
+        // Ensure article data is properly structured and all required fields are present
+        if (!entry.article || !entry.article.title || entry.quantity === undefined || entry.unit_price === undefined) {
+          // Log what fields are missing from the entry for better error message clarity
+          const missingFields = [];
+          if (!entry.article || !entry.article.title) missingFields.push('title');
+          if (entry.quantity === undefined) missingFields.push('quantity');
+          if (entry.unit_price === undefined) missingFields.push('unit_price');
+  
+          throw new Error(`Invalid article entry at index ${index}: Missing required fields (${missingFields.join(', ')}).`);
+        }
+  
+        // Further check that unit_price and quantity are of the correct types
+        if (typeof entry.unit_price !== 'number') {
+          throw new Error(`Invalid unit_price type at index ${index}: Expected number, got ${typeof entry.unit_price}`);
+        }
+        if (typeof entry.quantity !== 'number') {
+          throw new Error(`Invalid quantity type at index ${index}: Expected number, got ${typeof entry.quantity}`);
+        }
+      });
+    }
   
     // Save article entries if provided
     const articleEntries =
       createQuotationDto.articleQuotationEntries &&
       (await this.expensearticleQuotationEntryService.saveMany(createQuotationDto.articleQuotationEntries));
   
-    if (!articleEntries) {
-      throw new Error('Article entries are missing');
+    if (!articleEntries || articleEntries.length === 0) {
+      throw new Error('Article entries are missing or invalid');
     }
   
     // Calculate financial information
-    const { subTotal = 0, total = 0 } = this.calculationsService.calculateLineItemsTotal(
+    const { subTotal, total } = this.calculationsService.calculateLineItemsTotal(
       articleEntries.map((entry) => entry.total),
       articleEntries.map((entry) => entry.subTotal),
     );
-  
-    if (isNaN(subTotal) || isNaN(total)) {
-      throw new Error('Invalid calculation for subTotal or total');
-    }
   
     // Apply general discount
     const totalAfterGeneralDiscount = this.calculationsService.calculateTotalDiscount(
@@ -210,10 +232,6 @@ export class ExpensQuotationService {
       createQuotationDto.discount_type,
     );
   
-    if (isNaN(totalAfterGeneralDiscount)) {
-      throw new Error('Invalid calculation for total after discount');
-    }
-  
     // Format articleEntries as lineItems for tax calculations
     const lineItems = await this.expensearticleQuotationEntryService.findManyAsLineItem(
       articleEntries.map((entry) => entry.id),
@@ -221,24 +239,23 @@ export class ExpensQuotationService {
   
     // Calculate tax summary and fetch tax details in parallel
     const taxSummary = await Promise.all(
-      this.calculationsService
-        .calculateTaxSummary(lineItems)
-        .map(async (item) => {
-          const tax = await this.taxService.findOneById(item.taxId);
-          return {
-            ...item,
-            label: tax.label,
-            value: tax.isRate ? tax.value * 100 : tax.value,
-            isRate: tax.isRate,
-          };
-        }),
+      this.calculationsService.calculateTaxSummary(lineItems).map(async (item) => {
+        const tax = await this.taxService.findOneById(item.taxId);
+  
+        return {
+          ...item,
+          label: tax.label,
+          value: tax.isRate ? tax.value * 100 : tax.value,
+          isRate: tax.isRate,
+        };
+      }),
     );
   
     // Fetch the latest sequential number for quotation
     const sequential = await this.expensequotationSequenceService.getSequential();
   
     // Save quotation metadata
-    const quotationMetaData = await this.expensequotationMetaDataService.save({
+    const expensequotationMetaData = await this.expensequotationMetaDataService.save({
       ...createQuotationDto.expensequotationMetaData,
       taxSummary,
     });
@@ -249,14 +266,14 @@ export class ExpensQuotationService {
       bankAccountId: bankAccount ? bankAccount.id : null,
       currencyId: currency ? currency.id : firm.currencyId,
       sequential,
-      articleQuotationEntries: articleEntries,
-      expensequotationMetaData: quotationMetaData, // Corrected here
+      expensearticleQuotationEntries: articleEntries,
+      expensequotationMetaData,
       subTotal,
       total: totalAfterGeneralDiscount,
     });
   
     // Handle file uploads if they exist
-    if (createQuotationDto.uploads && createQuotationDto.uploads.length > 0) {
+    if (createQuotationDto.uploads) {
       await Promise.all(
         createQuotationDto.uploads.map((u) =>
           this.expensequotationUploadService.save(quotation.id, u.uploadId),
@@ -266,10 +283,5 @@ export class ExpensQuotationService {
   
     return quotation;
   }
-
-
   
-  
-  
-
-}
+}  

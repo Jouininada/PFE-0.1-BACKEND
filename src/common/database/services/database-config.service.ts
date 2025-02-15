@@ -18,7 +18,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       synchronize: false,
       dropSchema: false,
       keepConnectionAlive: true,
-      logging: false,
+      logging: true,
       entities: [
         __dirname + '/../../**/*.entity{.ts,.js}',
         __dirname + '/../../../modules/**/*.entity{.ts,.js}',

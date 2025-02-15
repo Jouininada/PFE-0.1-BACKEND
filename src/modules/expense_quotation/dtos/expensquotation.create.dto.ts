@@ -13,6 +13,7 @@ import { CreateArticleQuotationEntryDto } from 'src/modules/quotation/dtos/artic
 import { EXPENSQUOTATION_STATUS } from '../enums/expensquotation-status.enum';
 import { CreateExpensQuotationMetaDataDto } from './expensquotation-meta-data.create.dto';
 import { CreateExpensQuotationUploadDto } from './expensquotation-upload.create.dto';
+import { CreateArticleExpensQuotationEntryDto } from './article-expensquotation-entry.create.dto';
 
 export class CreateExpensQuotationDto {
   @ApiProperty({ example: faker.date.anytime() })
@@ -100,9 +101,9 @@ export class CreateExpensQuotationDto {
   @MaxLength(1024)
   notes?: string;
 
-  @ApiProperty({ type: () => CreateArticleQuotationEntryDto, isArray: true })
+  @ApiProperty({ type: () => CreateArticleExpensQuotationEntryDto, isArray: true })
   @IsOptional()
-  articleQuotationEntries?: CreateArticleQuotationEntryDto[];
+  articleQuotationEntries?: CreateArticleExpensQuotationEntryDto[];
 
   @ApiProperty({ type: () => CreateExpensQuotationMetaDataDto })
   @IsOptional()

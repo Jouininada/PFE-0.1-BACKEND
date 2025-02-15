@@ -75,8 +75,10 @@ export class ExpensQuotationEntity extends EntityHelper {
   @JoinColumn({ name: "bankAccountId" })
   bankAccount: BankAccountEntity;
 
-  @OneToMany(() => ArticleExpensQuotationEntryEntity, (entry) => entry.expenseQuotation)
-  articleQuotationEntries: ArticleExpensQuotationEntryEntity[];
+// Dans ExpensQuotationEntity
+@OneToMany(() => ArticleExpensQuotationEntryEntity, (entry) => entry.expenseQuotation)
+expensearticleQuotationEntries: ArticleExpensQuotationEntryEntity[];
+
 
   // Relation avec ExpensQuotationMetaDataEntity
   @OneToOne(() => ExpensQuotationMetaDataEntity)
@@ -94,4 +96,6 @@ export class ExpensQuotationEntity extends EntityHelper {
 
   @OneToMany(() => ExpensQuotationUploadEntity, (upload) => upload.expenseQuotation)
   uploads: ExpensQuotationUploadEntity[];
+
+  
 }

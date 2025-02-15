@@ -9,25 +9,25 @@ import { ArticleExpensQuotationEntryEntity } from './article-expensquotation-ent
 import { TaxEntity } from 'src/modules/tax/repositories/entities/tax.entity';
 import { EntityHelper } from 'src/common/database/interfaces/database.entity.interface';
 
-@Entity('expense_article_quotation_entry_tax') // Match the table name in SQL
+@Entity('expense_article_quotation_entry_tax') // Nom de la table dans la base de données
 export class ArticleExpensQuotationEntryTaxEntity extends EntityHelper {
 
   @PrimaryGeneratedColumn()
   id: number;
 
   @ManyToOne(() => ArticleExpensQuotationEntryEntity)
-  @JoinColumn({ name: 'expenseArticleEntryId' }) // Foreign key
+  @JoinColumn({ name: 'expenseArticleEntryId' }) // Clé étrangère vers ArticleExpensQuotationEntryEntity
   expenseArticleEntry: ArticleExpensQuotationEntryEntity;
 
   @ManyToOne(() => TaxEntity)
-  @JoinColumn({ name: 'taxId' }) // Foreign key
+  @JoinColumn({ name: 'taxId' }) // Clé étrangère vers TaxEntity
   tax: TaxEntity;
 
-  // Soft delete and timestamps inherited from EntityHelper
+  // Soft delete et timestamps hérités de EntityHelper
 
   @Column({ type: 'int' })
-  articleExpensQuotationEntryId:number;
+  articleExpensQuotationEntryId: number; // Ajoutez ici la colonne
 
   @Column({ type: 'int' })
-  taxId: number;
+  taxId: number; // Clé étrangère pour TaxEntity
 }

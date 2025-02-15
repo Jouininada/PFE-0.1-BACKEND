@@ -83,15 +83,15 @@ export class ExpensQuotationController {
   ): Promise<ResponseExpensQuotationDto> {
     return await this.expensQuotationService.save(createExpensQuotationDto);
   }
-
+/*
   
- /* @Post('/duplicate')
+  @Post('/duplicate')
   async duplicate(
     @Body() duplicateExpensQuotationDto: DuplicateExpensQuotationDto,
   ): Promise<ResponseExpensQuotationDto> {
     return await this.expensQuotationService.duplicate(duplicateExpensQuotationDto);
-  }*/
-
+  }
+*/
 
  
 }
