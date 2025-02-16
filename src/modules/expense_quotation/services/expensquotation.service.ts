@@ -301,6 +301,153 @@ export class ExpensQuotationService {
     return this.expensequotationRepository.deleteAll();
   }
 
+  async updateQuotationUploads(
+    id: number,
+    updateQuotationDto: UpdateExpensQuotationDto,
+    existingUploads: UpdateExpensQuotationDto[],
+  ) {
+    const newUploads = [];
+    const keptUploads = [];
+    const eliminatedUploads = [];
+
+    if (updateQuotationDto.uploads) {
+      for (const upload of existingUploads) {
+        const exists = updateQuotationDto.uploads.some(
+          (u) => u.id === upload.id,
+        );
+        if (!exists)
+          eliminatedUploads.push(
+            await this.expensequotationUploadService.softDelete(upload.id),
+          );
+        else keptUploads.push(upload);
+      }
+      for (const upload of updateQuotationDto.uploads) {
+        if (!upload.id)
+          newUploads.push(
+            await this.expensequotationUploadService.save(id, upload.uploadId),
+          );
+      }
+    }
+    return {
+      keptUploads,
+      newUploads,
+      eliminatedUploads,
+    };
+  }
+
+
+  @Transactional()
+  async update(
+    id: number,
+    updateQuotationDto: UpdateExpensQuotationDto,
+  ): Promise<ExpensQuotationEntity> {
+    // Retrieve the existing quotation with necessary relations
+    const { uploads: existingUploads, ...existingQuotation } =
+      await this.findOneByCondition({
+        filter: `id||$eq||${id}`,
+        join: 'articleQuotationEntries,quotationMetaData,uploads',
+      });
+
+    // Fetch and validate related entities in parallel to optimize performance
+    const [firm, bankAccount, currency, interlocutor] = await Promise.all([
+      this.firmService.findOneByCondition({
+        filter: `id||$eq||${updateQuotationDto.firmId}`,
+      }),
+      updateQuotationDto.bankAccountId
+        ? this.bankAccountService.findOneById(updateQuotationDto.bankAccountId)
+        : null,
+      updateQuotationDto.currencyId
+        ? this.currencyService.findOneById(updateQuotationDto.currencyId)
+        : null,
+      updateQuotationDto.interlocutorId
+        ? this.interlocutorService.findOneById(
+            updateQuotationDto.interlocutorId,
+          )
+        : null,
+    ]);
+
+    // Soft delete old article entries to prepare for new ones
+    const existingArticles =
+      await this.expensearticleQuotationEntryService.softDeleteMany(
+        existingQuotation.expensearticleQuotationEntries.map((entry) => entry.id),
+      );
+
+    // Save new article entries
+    const articleEntries: ArticleExpensQuotationEntryEntity[] =
+      updateQuotationDto.articleQuotationEntries
+        ? await this.expensearticleQuotationEntryService.saveMany(
+            updateQuotationDto.articleQuotationEntries,
+          )
+        : existingArticles;
+
+    // Calculate the subtotal and total for the new entries
+    const { subTotal, total } =
+      this.calculationsService.calculateLineItemsTotal(
+        articleEntries.map((entry) => entry.total),
+        articleEntries.map((entry) => entry.subTotal),
+      );
+
+    // Apply general discount
+    const totalAfterGeneralDiscount =
+      this.calculationsService.calculateTotalDiscount(
+        total,
+        updateQuotationDto.discount,
+        updateQuotationDto.discount_type,
+      );
+
+    // Convert article entries to line items for further calculations
+    const lineItems =
+      await this.expensearticleQuotationEntryService.findManyAsLineItem(
+        articleEntries.map((entry) => entry.id),
+      );
+
+    // Calculate tax summary (handle both percentage and fixed taxes)
+    const taxSummary = await Promise.all(
+      this.calculationsService
+        .calculateTaxSummary(lineItems)
+        .map(async (item) => {
+          const tax = await this.taxService.findOneById(item.taxId);
+
+          return {
+            ...item,
+            label: tax.label,
+            // Check if the tax is rate-based or a fixed amount
+            rate: tax.isRate ? tax.value * 100 : tax.value, // handle both types
+            isRate: tax.isRate,
+          };
+        }),
+    );
+
+    // Save or update the quotation metadata with the updated tax summary
+    const expensequotationMetaData = await this.expensequotationMetaDataService.save({
+      ...existingQuotation.expensequotationMetaData,
+      ...updateQuotationDto.expensequotationMetaData,
+      taxSummary,
+    });
+
+    // Handle uploads - manage existing, new, and eliminated uploads
+   /* const { keptUploads, newUploads, eliminatedUploads } =
+      await this.updateQuotationUploads(
+        existingQuotation.id,
+        updateQuotationDto,
+        existingUploads,
+      );*/
+
+    // Save and return the updated quotation with all updated details
+    return this.expensequotationRepository.save({
+      ...updateQuotationDto,
+      bankAccountId: bankAccount ? bankAccount.id : null,
+      currencyId: currency ? currency.id : firm.currencyId,
+      interlocutorId: interlocutor ? interlocutor.id : null,
+      expensearticleQuotationEntries: articleEntries,
+      expensequotationMetaData,
+      subTotal,
+      total: totalAfterGeneralDiscount,
+     // uploads: [...keptUploads, ...newUploads, ...eliminatedUploads],
+    });
+  }
+
+
 
   
   
