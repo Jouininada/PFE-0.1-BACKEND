@@ -34,31 +34,20 @@ export class ExpensQuotationController {
     private readonly invoiceService: InvoiceService,
   ) {}
 
-  //fonctionne
   @Get('/all')
   async findAll(
     @Query() options: IQueryObject,
   ): Promise<ResponseExpensQuotationDto[]> {
-    const expensQuotations = await this.expensQuotationService.findAll(options);
-    
-    // Map each entity to the ResponseExpensQuotationDto
-    return expensQuotations.map(entity => {
-      const dto = new ResponseExpensQuotationDto();
-      // Ensure correct mapping for status
-      dto.status = entity.status as unknown as EXPENSQUOTATION_STATUS; // Cast the status to the correct enum type
-      // Map other properties if necessary
-      return dto;
-    });
+    return await this.expensQuotationService.findAll(options);
   }
-  
-  //fonctionne
-    @Get('/list')
-    @ApiPaginatedResponse(ResponseExpensQuotationDto)
-    async findAllPaginated(
-      @Query() query: IQueryObject,
-    ): Promise<PageDto<ResponseExpensQuotationDto>> {
-      return this.expensQuotationService.findAllPaginated(query);
-    }
+
+  @Get('/list')
+  @ApiPaginatedResponse(ResponseExpensQuotationDto)
+  async findAllPaginated(
+    @Query() query: IQueryObject,
+  ): Promise<PageDto<ResponseExpensQuotationDto>> {
+    return await this.expensQuotationService.findAllPaginated(query);
+  }
 
 //fonctionne
     @Get('/:id')

@@ -10,6 +10,7 @@ import { EntityHelper } from 'src/common/database/interfaces/database.entity.int
 import { ArticleExpensQuotationEntryEntity } from './article-expensquotation-entry.entity';
 import { BankAccountEntity } from 'src/modules/bank-account/repositories/entities/bank-account.entity';
 import { ExpensQuotationUploadEntity } from './expensquotation-file.entity';
+import { InvoiceEntity } from 'src/modules/invoice/repositories/entities/invoice.entity';
 
 @Entity('expense_quotation')
 export class ExpensQuotationEntity extends EntityHelper {
@@ -96,6 +97,9 @@ expensearticleQuotationEntries: ArticleExpensQuotationEntryEntity[];
 
   @OneToMany(() => ExpensQuotationUploadEntity, (upload) => upload.expenseQuotation)
   uploads: ExpensQuotationUploadEntity[];
+
+  @OneToMany(() => InvoiceEntity, (invoice) => invoice.quotation)
+  invoices: InvoiceEntity[];
 
   
 }

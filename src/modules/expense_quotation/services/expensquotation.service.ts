@@ -130,7 +130,6 @@ export class ExpensQuotationService {
     );
   }
 
-
   async findAllPaginated(
     query: IQueryObject,
   ): Promise<PageDto<ResponseExpensQuotationDto>> {
@@ -139,11 +138,11 @@ export class ExpensQuotationService {
     const count = await this.expensequotationRepository.getTotalCount({
       where: queryOptions.where,
     });
-  
+
     const entities = await this.expensequotationRepository.findAll(
       queryOptions as FindManyOptions<ExpensQuotationEntity>,
     );
-  
+
     const pageMetaDto = new PageMetaDto({
       pageOptionsDto: {
         page: parseInt(query.page),
@@ -151,18 +150,12 @@ export class ExpensQuotationService {
       },
       itemCount: count,
     });
+
+    return new PageDto(entities, pageMetaDto);
+  }
+
   
-    // Transformation des entités en DTOs avec conversion des types nécessaires
-    const dtos: ResponseExpensQuotationDto[] = entities.map(entity => {
-      const dto = new ResponseExpensQuotationDto();
-      // Convertir le type status si nécessaire
-      dto.status = entity.status as unknown as EXPENSQUOTATION_STATUS; // Si status est une chaîne, vous pouvez le caster en EXPENSQUOTATION_STATUS
-      // Mapper d'autres propriétés si nécessaire
-      return dto;
-    });
-  
-    return new PageDto(dtos, pageMetaDto);
-  }@Transactional()
+  @Transactional()
   async save(createQuotationDto: CreateExpensQuotationDto): Promise<ExpensQuotationEntity> {
     // Parallelize fetching firm, bank account, and currency, as they are independent
     const [firm, bankAccount, currency] = await Promise.all([
