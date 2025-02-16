@@ -98,16 +98,6 @@ export class ExpensQuotationService {
     }
   }
 
-
-
-
-  async findOneById(id: number): Promise<ExpensQuotationEntity> {
-    const expensequotation = await this.expensequotationRepository.findOneById(id);
-    if (!expensequotation) {
-      throw new QuotationNotFoundException();
-    }
-    return expensequotation;
-  }
   
 
   async findOneByCondition(
@@ -276,5 +266,43 @@ export class ExpensQuotationService {
   
     return quotation;
   }
+
+  async findOneById(id: number): Promise<ExpensQuotationEntity> {
+    const expensequotation = await this.expensequotationRepository.findOne({
+      where: { id },
+      withDeleted: true, // Permet de retrouver les éléments soft-deleted
+    });
   
-}  
+    if (!expensequotation) {
+      throw new QuotationNotFoundException();
+    }
+    
+    return expensequotation;
+  }
+
+  async saveMany(
+    createQuotationDtos: CreateExpensQuotationDto[],
+  ): Promise<ExpensQuotationEntity[]> {
+    const quotations = [];
+    for (const createQuotationDto of createQuotationDtos) {
+      const quotation = await this.save(createQuotationDto);
+      quotations.push(quotation);
+    }
+    return quotations;
+  }
+
+
+  async softDelete(id: number): Promise<ExpensQuotationEntity> {
+    await this.findOneById(id);
+    return this.expensequotationRepository.softDelete(id);
+  }
+
+  async deleteAll() {
+    return this.expensequotationRepository.deleteAll();
+  }
+
+
+  
+  
+}
+  
