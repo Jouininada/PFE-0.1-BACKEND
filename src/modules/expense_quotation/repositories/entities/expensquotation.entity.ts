@@ -36,6 +36,10 @@ export class ExpensQuotationEntity extends EntityHelper {
   @Column({ type: 'enum', enum: EXPENSQUOTATION_STATUS, nullable: true })
   status: EXPENSQUOTATION_STATUS;
 
+  
+  @Column({ type: 'int' })
+  interlocutorId: number;
+
   @Column({ type: 'float', nullable: true })
   discount: number;
 

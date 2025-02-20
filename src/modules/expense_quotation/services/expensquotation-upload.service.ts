@@ -107,6 +107,13 @@ export class ExpensQuotationUploadService {
     return duplicatedQuotationUpload;
   }
 
+  async softDelete(id: number): Promise<ExpensQuotationUploadEntity> {
+    const upload = await this.findOneById(id);
+    this.storageService.delete(upload.uploadId);
+    this.quotationUploadRepository.softDelete(upload.id);
+    return upload;
+  }
+
   async duplicateMany(
     ids: number[],
     quotationId: number,
@@ -118,4 +125,23 @@ export class ExpensQuotationUploadService {
   }
 
 
+  async softDeleteMany(
+    quotationUploadEntities: ExpensQuotationUploadEntity[],
+  ): Promise<ExpensQuotationUploadEntity[]> {
+    this.storageService.deleteMany(
+      quotationUploadEntities.map((qu) => qu.upload.id),
+    );
+    return this.quotationUploadRepository.softDeleteMany(
+      quotationUploadEntities.map((qu) => qu.id),
+    );
   }
+
+  async deleteAll() {
+    return this.quotationUploadRepository.deleteAll();
+  }
+
+  async getTotal(): Promise<number> {
+    return this.quotationUploadRepository.getTotalCount();
+  }
+}
+

@@ -39,4 +39,12 @@ export class ArticleExpensQuotationEntryTaxService {
     return savedEntries;
   }
 
+  async softDelete(id: number): Promise<void> {
+    await this.articleExpensQuotationEntryTaxRepository.softDelete(id);
+  }
+
+  async softDeleteMany(ids: number[]): Promise<void> {
+    ids.forEach(async (id) => await this.softDelete(id));
+  }
+
 }

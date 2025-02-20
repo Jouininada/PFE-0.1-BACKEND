@@ -33,6 +33,7 @@ import { DuplicateExpensQuotationDto } from '../dtos/expensquotation.duplicate.d
 
 import { LogEvent } from 'src/common/logger/decorators/log-event.decorator';
 import { EVENT_TYPE } from 'src/app/enums/logger/event-types.enum';
+import { UpdateExpensQuotationDto } from '../dtos/expensquotation.update.dto';
 
 
 @ApiTags('expensquotation')
@@ -104,5 +105,23 @@ export class ExpensQuotationController {
     return this.expensQuotationService.softDelete(id);
   }
 
+
+
+  @ApiParam({
+    name: 'id',
+    type: 'number',
+    required: true,
+  })
+  @Put('/:id')
+  @LogEvent(EVENT_TYPE.BUYING_QUOTATION_UPDATED)
+  async update(
+    @Param('id') id: number,
+    @Body() updateQuotationDto: UpdateExpensQuotationDto,
+    @Req() req: Request,
+  ): Promise<ResponseExpensQuotationDto> {
+    // Setting logInfo on the request object
+    req.logInfo = { action: 'update', id };  // Adding action to provide more context in logs
+    return this.expensQuotationService.update(id, updateQuotationDto);
+  }
  
 }

@@ -185,4 +185,23 @@ export class ArticleExpensQuotationEntryService {
         }
         return duplicatedEntries;
     }
+
+
+    async softDelete(id: number): Promise<ArticleExpensQuotationEntryEntity> {
+        const entry = await this.expensQuotationEntryRepository.findByCondition({
+          where: { id, deletedAt: null },
+          relations: { articleExpensQuotationEntryTaxes: true },
+        });
+        await this.expensQuotationEntryTaxService.softDeleteMany(
+          entry.articleExpensQuotationEntryTaxes.map((taxEntry) => taxEntry.id),
+        );
+        return this.expensQuotationEntryRepository.softDelete(id);
+      }
+    
+      async softDeleteMany(ids: number[]): Promise<ArticleExpensQuotationEntryEntity[]> {
+        const entries = await Promise.all(
+          ids.map(async (id) => this.softDelete(id)),
+        );
+        return entries;
+      }
 }
