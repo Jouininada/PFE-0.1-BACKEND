@@ -22,6 +22,8 @@ import { CurrencyController } from 'src/modules/currency/controllers/currency.co
 import { CurrencyModule } from 'src/modules/currency/currency.module';
 import { DefaultConditionController } from 'src/modules/default-condition/controllers/default-condition.controller';
 import { DefaultConditionModule } from 'src/modules/default-condition/default-condition.module';
+import { ExpenseInvoiceController } from 'src/modules/expense-invoice/controllers/expense-invoice.controller';
+import { ExpenseInvoiceModule } from 'src/modules/expense-invoice/expense-invoice.module';
 import { ExpensQuotationController } from 'src/modules/expense_quotation/controllers/expensquotation.controller';
 import { ExpenseQuotationModule } from 'src/modules/expense_quotation/expensquotation.module';
 import { FirmInterlocutorEntryController } from 'src/modules/firm-interlocutor-entry/controllers/firm-interlocutor-entry.controller.ts';
@@ -74,7 +76,8 @@ import { UsersModule } from 'src/modules/user/user.module';
     TaxController,
     TaxWithholdingController,
     UserController,
-    ExpensQuotationController
+    ExpensQuotationController,
+    ExpenseInvoiceController
 
   ],
   providers: [],
@@ -104,7 +107,9 @@ import { UsersModule } from 'src/modules/user/user.module';
     TaxModule,
     TaxWithholdingModule,
     UsersModule,
-    ExpenseQuotationModule
+    ExpenseQuotationModule,
+    ExpenseInvoiceModule,
+
 
   ],
 })
