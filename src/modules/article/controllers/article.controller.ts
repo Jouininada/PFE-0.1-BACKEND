@@ -25,13 +25,30 @@ import { IQueryObject } from 'src/common/database/interfaces/database-query-opti
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
+  @Post('/save-with-filter-title')
+  async saveWithFilterTitle(
+    @Body() createArticleDto: CreateArticleDto,
+  ): Promise<ResponseArticleDto | { message: string }> {
+    // Vérification si l'article existe déjà par titre via le service
+    const existingArticle = await this.articleService.saveWithFilterTitle(createArticleDto);
+    
+    // Si un article existe déjà, on renvoie un message d'erreur
+    if (existingArticle === null) {
+      return { message: 'L\'article avec ce titre existe déjà.' };
+    }
+  
+    // Sinon, on crée le nouvel article et on le retourne
+    return await this.articleService.save(createArticleDto);
+  }
+  
+  
+
   @Get('/all')
   async findAll(@Query() options: IQueryObject): Promise<ResponseArticleDto[]> {
     return await this.articleService.findAll(options);
   }
 
   @Get('/list')
-  @ApiPaginatedResponse(ResponseArticleDto)
   async findAllPaginated(
     @Query() query: IQueryObject,
   ): Promise<PageDto<ResponseArticleDto>> {
@@ -54,7 +71,7 @@ export class ArticleController {
     return await this.articleService.findOneByCondition(query);
   }
 
-  @Post('')
+  @Post('/save')
   async save(
     @Body() createArticleDto: CreateArticleDto,
   ): Promise<ResponseArticleDto> {
@@ -74,7 +91,7 @@ export class ArticleController {
     return await this.articleService.update(id, updateArticleDto);
   }
 
-  @Delete('/:id')
+  @Delete('/delete/:id')
   @ApiParam({
     name: 'id',
     type: 'number',
