@@ -11,6 +11,7 @@ import { ArticleExpensQuotationEntryEntity } from './article-expensquotation-ent
 import { BankAccountEntity } from 'src/modules/bank-account/repositories/entities/bank-account.entity';
 import { ExpensQuotationUploadEntity } from './expensquotation-file.entity';
 import { InvoiceEntity } from 'src/modules/invoice/repositories/entities/invoice.entity';
+import { ExpenseInvoiceEntity } from 'src/modules/expense-invoice/repositories/entities/expense-invoice.entity';
 
 @Entity('expense_quotation')
 export class ExpensQuotationEntity extends EntityHelper {
@@ -87,11 +88,11 @@ expensearticleQuotationEntries: ArticleExpensQuotationEntryEntity[];
 
   // Relation avec ExpensQuotationMetaDataEntity
   @OneToOne(() => ExpensQuotationMetaDataEntity)
-  @JoinColumn({ name: "expensequotationMetaDataId" })  // Associer la clé avec la colonne ID
+  @JoinColumn({ name: "expenseMetaDataId" })  // Associer la clé avec la colonne ID
   expensequotationMetaData: ExpensQuotationMetaDataEntity;
 
   @Column({ type: 'int', nullable: true })
-  expensequotationMetaDataId: number;
+  expenseMetaDataId: number;
 
   @Column({ type: 'int' })
   bankAccountId: number;
@@ -102,8 +103,9 @@ expensearticleQuotationEntries: ArticleExpensQuotationEntryEntity[];
   @OneToMany(() => ExpensQuotationUploadEntity, (upload) => upload.expenseQuotation)
   uploads: ExpensQuotationUploadEntity[];
 
-  @OneToMany(() => InvoiceEntity, (invoice) => invoice.quotation)
-  invoices: InvoiceEntity[];
+  @OneToMany(() => ExpenseInvoiceEntity, (invoice) => invoice.quotation)
+
+  invoices: ExpenseInvoiceEntity[];
 
   
 }

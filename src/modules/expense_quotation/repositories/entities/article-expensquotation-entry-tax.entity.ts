@@ -16,7 +16,7 @@ export class ArticleExpensQuotationEntryTaxEntity extends EntityHelper {
   id: number;
 
   @ManyToOne(() => ArticleExpensQuotationEntryEntity)
-  @JoinColumn({ name: 'expenseArticleEntryId' }) // Clé étrangère vers ArticleExpensQuotationEntryEntity
+  @JoinColumn({ name: 'expenseArticleEntryId' }) // Correspond au nom exact dans la table MySQL
   expenseArticleEntry: ArticleExpensQuotationEntryEntity;
 
   @ManyToOne(() => TaxEntity)
@@ -25,9 +25,9 @@ export class ArticleExpensQuotationEntryTaxEntity extends EntityHelper {
 
   // Soft delete et timestamps hérités de EntityHelper
 
-  @Column({ type: 'int' })
-  articleExpensQuotationEntryId: number; // Ajoutez ici la colonne
-
+  @Column({ type: 'int', name: 'expenseArticleEntryId' })
+  articleExpensQuotationEntryId: number;
+  
   @Column({ type: 'int' })
   taxId: number; // Clé étrangère pour TaxEntity
 }

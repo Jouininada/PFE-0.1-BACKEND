@@ -11,8 +11,9 @@ export class ArticleExpensQuotationEntryEntity extends EntityHelper {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ name: 'unit_price', type: 'float', nullable: true })
   unitPrice: number;
+  
 
   @Column({ type: 'float', nullable: true })
   quantity: number;
@@ -20,8 +21,9 @@ export class ArticleExpensQuotationEntryEntity extends EntityHelper {
   @Column({ type: 'float', nullable: true })
   discount: number;
 
-  @Column({ type: 'enum', enum: DISCOUNT_TYPES, nullable: true })
-  discountType: DISCOUNT_TYPES;
+  @Column({ name: 'discount_type', type: 'enum', enum: DISCOUNT_TYPES, nullable: true })
+discountType: DISCOUNT_TYPES;
+
 
   @Column({ type: 'float', nullable: true })
   subTotal: number;
