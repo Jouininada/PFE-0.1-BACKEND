@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class ExpenseDuplicateInvoiceDto {
   @ApiProperty({ example: 1, type: Number })
@@ -9,4 +9,10 @@ export class ExpenseDuplicateInvoiceDto {
   @IsBoolean()
   @IsOptional()
   includeFiles?: boolean;
+
+
+@IsOptional()
+  @IsString()
+  @MaxLength(25)
+  sequentialNumbr?: string;
 }

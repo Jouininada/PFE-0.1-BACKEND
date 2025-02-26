@@ -68,10 +68,10 @@ export class ExpensQuotationService {
         'expensequotationMetaData,',
         'firm.deliveryAddress,',
         'firm.invoicingAddress,',
-        'articleQuotationEntries,',
-        'articleQuotationEntries.article,',
-        'articleQuotationEntries.articleQuotationEntryTaxes,',
-        'articleQuotationEntries.articleQuotationEntryTaxes.tax',
+        'expensearticleQuotationEntries,',
+        'expensearticleQuotationEntries.article,',
+        'expensearticleQuotationEntries.articleExpensQuotationEntryTaxes,',
+        'expensearticleQuotationEntries.articleExpensQuotationEntryTaxes.tax',
       ),
     });
     const digitsAferComma = quotation.currency.digitAfterComma;
@@ -345,7 +345,7 @@ export class ExpensQuotationService {
     const { uploads: existingUploads, ...existingQuotation } =
       await this.findOneByCondition({
         filter: `id||$eq||${id}`,
-        join: 'articleQuotationEntries,quotationMetaData,uploads',
+        join: 'expensearticleQuotationEntries,expensequotationMetaData,uploads',
       });
 
     // Fetch and validate related entities in parallel to optimize performance

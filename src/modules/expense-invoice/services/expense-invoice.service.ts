@@ -185,130 +185,117 @@ export class ExpenseInvoiceService {
   }
 
   @Transactional()
-  async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEntity> {
-    // Parallelize fetching firm, bank account, and currency, as they are independent
-    const [firm, bankAccount, currency] = await Promise.all([
-      this.firmService.findOneByCondition({
-        filter: `id||$eq||${createInvoiceDto.firmId}`,
-      }),
-      createInvoiceDto.bankAccountId
-        ? this.bankAccountService.findOneById(createInvoiceDto.bankAccountId)
-        : Promise.resolve(null),
-      createInvoiceDto.currencyId
-        ? this.currencyService.findOneById(createInvoiceDto.currencyId)
-        : Promise.resolve(null),
-    ]);
+async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEntity> {
+  const [firm, bankAccount, currency] = await Promise.all([
+    this.firmService.findOneByCondition({
+      filter: `id||$eq||${createInvoiceDto.firmId}`,
+    }),
+    createInvoiceDto.bankAccountId
+      ? this.bankAccountService.findOneById(createInvoiceDto.bankAccountId)
+      : Promise.resolve(null),
+    createInvoiceDto.currencyId
+      ? this.currencyService.findOneById(createInvoiceDto.currencyId)
+      : Promise.resolve(null),
+  ]);
 
-    if (!firm) {
-      throw new Error('Firm not found');
-    }
-
-    // Check interlocutor existence
-    await this.interlocutorService.findOneById(createInvoiceDto.interlocutorId);
-
-    // Save article entries if provided
-    const articleEntries =
-      createInvoiceDto.articleInvoiceEntries &&
-      (await this.articleInvoiceEntryService.saveMany(
-        createInvoiceDto.articleInvoiceEntries,
-      ));
-
-    if (!articleEntries) {
-      throw new Error('Article entries are missing');
-    }
-
-    // Calculate financial information
-    const { subTotal, total } =
-      this.calculationsService.calculateLineItemsTotal(
-        articleEntries.map((entry) => entry.total),
-        articleEntries.map((entry) => entry.subTotal),
-      );
-
-    // Fetch tax stamp if provided
-    const taxStamp = createInvoiceDto.taxStampId
-      ? await this.taxService.findOneById(createInvoiceDto.taxStampId)
-      : null;
-
-    // Apply general discount
-    const totalAfterGeneralDiscount =
-      this.calculationsService.calculateTotalDiscount(
-        total,
-        createInvoiceDto.discount,
-        createInvoiceDto.discount_type,
-        taxStamp?.value || 0,
-      );
-
-    // Format articleEntries as lineItems for tax calculations
-    const lineItems = await this.articleInvoiceEntryService.findManyAsLineItem(
-      articleEntries.map((entry) => entry.id),
-    );
-
-    // Calculate tax summary and fetch tax details in parallel
-    const taxSummary = await Promise.all(
-      this.calculationsService
-        .calculateTaxSummary(lineItems)
-        .map(async (item) => {
-          const tax = await this.taxService.findOneById(item.taxId);
-
-          return {
-            ...item,
-            label: tax.label,
-            // If the tax is a rate (percentage), multiply by 100 for percentage display,
-            // otherwise use the fixed amount directly.
-            value: tax.isRate ? tax.value * 100 : tax.value,
-            isRate: tax.isRate, // You can also return this flag for further use.
-          };
-        }),
-    );
-
-    // Fetch the latest sequential number for invoice
-    const sequential = await this.invoiceSequenceService.getSequential();
-
-    // Save invoice metadata
-    const invoiceMetaData = await this.invoiceMetaDataService.save({
-      ...createInvoiceDto.invoiceMetaData,
-      taxSummary,
-    });
-
-    // Ensure taxWithholding.rate is valid and calculate the withholding amount
-    let taxWithholdingAmount = 0;
-    if (createInvoiceDto.taxWithholdingId) {
-      const taxWithholding = await this.taxWithholdingService.findOneById(
-        createInvoiceDto.taxWithholdingId,
-      );
-
-      if (taxWithholding.rate !== undefined && taxWithholding.rate !== null) {
-        taxWithholdingAmount =
-          totalAfterGeneralDiscount * (taxWithholding.rate / 100);
-      }
-    }
-
-    // Save the invoice entity
-    const invoice = await this.invoiceRepository.save({
-      ...createInvoiceDto,
-      bankAccountId: bankAccount ? bankAccount.id : null,
-      currencyId: currency ? currency.id : firm.currencyId,
-      //this will be changed to fit with the connected cabinet
-      cabinetId: 1,
-      sequential,
-      articleExpenseEntries: articleEntries,
-      expenseInvoiceMetaData: invoiceMetaData,
-      subTotal,
-      taxWithholdingAmount: taxWithholdingAmount || 0,
-      total: totalAfterGeneralDiscount,
-    });
-
-    // Handle file uploads if they exist
-    if (createInvoiceDto.uploads) {
-      await Promise.all(
-        createInvoiceDto.uploads.map((u) =>
-          this.invoiceUploadService.save(invoice.id, u.uploadId),
-        ),
-      );
-    }
-
-    return invoice;
+  if (!firm) {
+    throw new Error('Firm not found');
   }
+
+  await this.interlocutorService.findOneById(createInvoiceDto.interlocutorId);
+
+  const articleEntries =
+    createInvoiceDto.articleInvoiceEntries &&
+    (await this.articleInvoiceEntryService.saveMany(
+      createInvoiceDto.articleInvoiceEntries,
+    ));
+
+  if (!articleEntries) {
+    throw new Error('Article entries are missing');
+  }
+
+  const { subTotal, total } =
+    this.calculationsService.calculateLineItemsTotal(
+      articleEntries.map((entry) => entry.total),
+      articleEntries.map((entry) => entry.subTotal),
+    );
+
+  const taxStamp = createInvoiceDto.taxStampId
+    ? await this.taxService.findOneById(createInvoiceDto.taxStampId)
+    : null;
+
+  const totalAfterGeneralDiscount =
+    this.calculationsService.calculateTotalDiscount(
+      total,
+      createInvoiceDto.discount,
+      createInvoiceDto.discount_type,
+      taxStamp?.value || 0,
+    );
+
+  const lineItems = await this.articleInvoiceEntryService.findManyAsLineItem(
+    articleEntries.map((entry) => entry.id),
+  );
+
+  const taxSummary = await Promise.all(
+    this.calculationsService
+      .calculateTaxSummary(lineItems)
+      .map(async (item) => {
+        const tax = await this.taxService.findOneById(item.taxId);
+        return {
+          ...item,
+          label: tax.label,
+          value: tax.isRate ? tax.value * 100 : tax.value,
+          isRate: tax.isRate,
+        };
+      }),
+  );
+
+  // ✅ Récupérer le numéro séquentiel correct
+  const sequentialNumbr = createInvoiceDto.sequentialNumbr || '';
+
+
+  const invoiceMetaData = await this.invoiceMetaDataService.save({
+    ...createInvoiceDto.invoiceMetaData,
+    taxSummary,
+  });
+
+  let taxWithholdingAmount = 0;
+  if (createInvoiceDto.taxWithholdingId) {
+    const taxWithholding = await this.taxWithholdingService.findOneById(
+      createInvoiceDto.taxWithholdingId,
+    );
+
+    if (taxWithholding.rate !== undefined && taxWithholding.rate !== null) {
+      taxWithholdingAmount =
+        totalAfterGeneralDiscount * (taxWithholding.rate / 100);
+    }
+  }
+
+  // ✅ Modifier l'insertion de la facture avec `sequentialNumber`
+  const invoice = await this.invoiceRepository.save({
+    ...createInvoiceDto,
+    bankAccountId: bankAccount ? bankAccount.id : null,
+    currencyId: currency ? currency.id : firm.currencyId,
+    cabinetId: 1,
+    sequentialNumbr:sequentialNumbr, // 🟢 Changer ici
+    articleExpenseEntries: articleEntries,
+    expenseInvoiceMetaData: invoiceMetaData,
+    subTotal,
+    taxWithholdingAmount: taxWithholdingAmount || 0,
+    total: totalAfterGeneralDiscount,
+  });
+
+  if (createInvoiceDto.uploads) {
+    await Promise.all(
+      createInvoiceDto.uploads.map((u) =>
+        this.invoiceUploadService.save(invoice.id, u.uploadId),
+      ),
+    );
+  }
+
+  return invoice;
+}
+
 
   async saveMany(
     createInvoiceDtos: ExpenseCreateInvoiceDto[],
@@ -327,8 +314,8 @@ export class ExpenseInvoiceService {
       quotationId: quotation.id,
       currencyId: quotation.currencyId,
       bankAccountId: quotation.bankAccountId,
-      //interlocutorId: quotation.interlocutor,
-      //firmId: quotation.firm,
+      interlocutorId: quotation.interlocutorId,
+      firmId: quotation.firmId,
       discount: quotation.discount,
       discount_type: quotation.discount_type,
       object: quotation.object,
@@ -416,7 +403,8 @@ export class ExpenseInvoiceService {
         taxStamp?.value || 0,
       );
 
-    // Convert article entries to line items for further calculations
+    // Convert 
+    //  entries to line items for further calculations
     const lineItems = await this.articleInvoiceEntryService.findManyAsLineItem(
       articleEntries.map((entry) => entry.id),
     );
@@ -501,12 +489,7 @@ export class ExpenseInvoiceService {
   ): Promise<ExpenseResponseInvoiceDto> {
     const existingInvoice = await this.findOneByCondition({
       filter: `id||$eq||${duplicateInvoiceDto.id}`,
-      join: new String().concat(
-        'expenseInvoiceMetaData,',
-        'articleExpenseEntries,',
-        'articleExpenseEntries.expenseArticleInvoiceEntryTaxes,',
-        'uploads',
-      ),
+      join: 'expenseInvoiceMetaData,articleExpenseEntries,articleExpenseEntries.expenseArticleInvoiceEntryTaxes,uploads',
     });
   
     if (!existingInvoice) {
@@ -517,17 +500,31 @@ export class ExpenseInvoiceService {
       throw new Error(`InvoiceMetaData is missing for invoice id ${duplicateInvoiceDto.id}`);
     }
   
-    // 🔹 Vérification supplémentaire pour éviter l'erreur
     const articleExpenseEntries = existingInvoice.articleExpenseEntries || [];
-  
     const invoiceMetaData = await this.invoiceMetaDataService.duplicate(
       existingInvoice.expenseInvoiceMetaData.id,
     );
-    const sequential = await this.invoiceSequenceService.getSequential();
+  
+    // 🔹 Récupération du dernier `sequentialNumbr`
+    const lastInvoice = await this.invoiceRepository.findOne({
+      order: { sequentialNumbr: 'DESC' as any },
+    });
+  
+    let sequentialNumbr = lastInvoice?.sequentialNumbr
+      ? (parseInt(lastInvoice.sequentialNumbr, 10) + 1).toString()
+      : '1';
+  
+    // 🔹 Vérification de l'unicité de `sequentialNumbr`
+    if (sequentialNumbr) {
+      while (await this.invoiceRepository.findOne({ where: { sequentialNumbr } })) {
+        sequentialNumbr = (parseInt(sequentialNumbr, 10) + 1).toString();
+      }
+    }
+  
     const invoice = await this.invoiceRepository.save({
       ...existingInvoice,
       id: undefined,
-      sequential,
+      sequentialNumbr,
       expenseInvoiceMetaData: invoiceMetaData,
       articleExpenseEntries: [],
       uploads: [],
@@ -536,12 +533,10 @@ export class ExpenseInvoiceService {
     });
   
     if (articleExpenseEntries.length > 0) {
-      const articleInvoiceEntries =
-        await this.articleInvoiceEntryService.duplicateMany(
-          articleExpenseEntries.map((entry) => entry.id),
-          invoice.id,
-        );
-  
+      const articleInvoiceEntries = await this.articleInvoiceEntryService.duplicateMany(
+        articleExpenseEntries.map((entry) => entry.id),
+        invoice.id,
+      );
       invoice.articleExpenseEntries = articleInvoiceEntries;
     }
   
@@ -557,6 +552,8 @@ export class ExpenseInvoiceService {
       uploads,
     });
   }
+  
+  
   async updateMany(
     updateInvoiceDtos: ExpenseUpdateInvoiceDto[],
   ): Promise<ExpenseInvoiceEntity[]> {

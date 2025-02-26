@@ -19,6 +19,13 @@ export class ExpenseResponseInvoiceDto {
   })
   sequential: string;
 
+  
+  @ApiProperty({
+    example: faker.finance.transactionDescription(),
+    type: String,
+  })
+  sequentialNumbr: string;
+
   @ApiProperty({ example: faker.date.anytime(), type: Date })
   date?: Date;
 
@@ -141,4 +148,5 @@ export class ExpenseResponseInvoiceDto {
     type: Number,
   })
   taxWithholdingId?: number;
+
 }

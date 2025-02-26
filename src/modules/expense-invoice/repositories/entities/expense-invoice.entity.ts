@@ -30,6 +30,7 @@ export class ExpenseInvoiceEntity extends EntityHelper {
 
   @Column({ type: 'varchar', length: 25, unique: true })
   sequential: string;
+  
 
   @Column({ nullable: true })
   date: Date;
@@ -136,5 +137,8 @@ quotation: ExpensQuotationEntity;
 
   @Column({ type: 'float', nullable: true })
   taxWithholdingAmount: number;
+  
+  @Column({ type: 'varchar', length: 25, unique: true, nullable: true })
+sequentialNumbr: string;
 }
 
