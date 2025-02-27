@@ -138,7 +138,7 @@ quotation: ExpensQuotationEntity;
   @Column({ type: 'float', nullable: true })
   taxWithholdingAmount: number;
   
-  @Column({ type: 'varchar', length: 25, unique: true, nullable: true })
+  @Column({ type: 'varchar', length: 25, nullable: true })
 sequentialNumbr: string;
 }
 

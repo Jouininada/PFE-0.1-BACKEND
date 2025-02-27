@@ -147,126 +147,124 @@ export class ExpensQuotationService {
   
   @Transactional()
   async save(createQuotationDto: CreateExpensQuotationDto): Promise<ExpensQuotationEntity> {
-    // Parallelize fetching firm, bank account, and currency, as they are independent
-    const [firm, bankAccount, currency] = await Promise.all([
-      this.firmService.findOneByCondition({
-        filter: `id||$eq||${createQuotationDto.firmId}`,
-      }),
-      createQuotationDto.bankAccountId
-        ? this.bankAccountService.findOneById(createQuotationDto.bankAccountId)
-        : Promise.resolve(null),
-      createQuotationDto.currencyId
-        ? this.currencyService.findOneById(createQuotationDto.currencyId)
-        : Promise.resolve(null),
-    ]);
+    try {
+      // Récupération des données en parallèle
+      const [firm, bankAccount, currency] = await Promise.all([
+        this.firmService.findOneByCondition({
+          filter: `id||$eq||${createQuotationDto.firmId}`,
+        }),
+        createQuotationDto.bankAccountId
+          ? this.bankAccountService.findOneById(createQuotationDto.bankAccountId)
+          : Promise.resolve(null),
+        createQuotationDto.currencyId
+          ? this.currencyService.findOneById(createQuotationDto.currencyId)
+          : Promise.resolve(null),
+      ]);
   
-    if (!firm) {
-      throw new Error('Firm not found'); // Handle firm not existing
-    }
+      if (!firm) {
+        throw new Error('Firm not found');
+      }
+      console.log('Firm found:', firm);
   
-    // Check interlocutor existence
-    await this.interlocutorService.findOneById(createQuotationDto.interlocutorId);
+      // Vérification de l'interlocuteur
+      await this.interlocutorService.findOneById(createQuotationDto.interlocutorId);
   
-    // Log and validate article entries
-    if (createQuotationDto.articleQuotationEntries) {
-      createQuotationDto.articleQuotationEntries.forEach((entry, index) => {
-        console.log(`Entry at index ${index}:`, entry); // Log the entry to help with debugging
+      // Validation des articles
+      if (createQuotationDto.articleQuotationEntries?.length) {
+        for (const [index, entry] of createQuotationDto.articleQuotationEntries.entries()) {
+          console.log(`Entry at index ${index}:`, entry);
   
-        // Ensure article data is properly structured and all required fields are present
-        if (!entry.article || !entry.article.title || entry.quantity === undefined || entry.unit_price === undefined) {
-          // Log what fields are missing from the entry for better error message clarity
-          const missingFields = [];
-          if (!entry.article || !entry.article.title) missingFields.push('title');
-          if (entry.quantity === undefined) missingFields.push('quantity');
-          if (entry.unit_price === undefined) missingFields.push('unit_price');
+          if (!entry.article?.title || entry.quantity === undefined || entry.unit_price === undefined) {
+            const missingFields = [];
+            if (!entry.article?.title) missingFields.push('title');
+            if (entry.quantity === undefined) missingFields.push('quantity');
+            if (entry.unit_price === undefined) missingFields.push('unit_price');
   
-          throw new Error(`Invalid article entry at index ${index}: Missing required fields (${missingFields.join(', ')}).`);
+            throw new Error(`Invalid article entry at index ${index}: Missing required fields (${missingFields.join(', ')}).`);
+          }
+  
+          if (typeof entry.unit_price !== 'number' || typeof entry.quantity !== 'number') {
+            throw new Error(`Invalid type for unit_price or quantity at index ${index}`);
+          }
         }
+      } else {
+        throw new Error('No article entries provided');
+      }
   
-        // Further check that unit_price and quantity are of the correct types
-        if (typeof entry.unit_price !== 'number') {
-          throw new Error(`Invalid unit_price type at index ${index}: Expected number, got ${typeof entry.unit_price}`);
-        }
-        if (typeof entry.quantity !== 'number') {
-          throw new Error(`Invalid quantity type at index ${index}: Expected number, got ${typeof entry.quantity}`);
-        }
-      });
-    }
+      // Sauvegarde des articles
+      const articleEntries = await this.expensearticleQuotationEntryService.saveMany(createQuotationDto.articleQuotationEntries);
+      if (!articleEntries?.length) {
+        throw new Error('Article entries could not be saved');
+      }
   
-    // Save article entries if provided
-    const articleEntries =
-      createQuotationDto.articleQuotationEntries &&
-      (await this.expensearticleQuotationEntryService.saveMany(createQuotationDto.articleQuotationEntries));
-  
-    if (!articleEntries || articleEntries.length === 0) {
-      throw new Error('Article entries are missing or invalid');
-    }
-  
-    // Calculate financial information
-    const { subTotal, total } = this.calculationsService.calculateLineItemsTotal(
-      articleEntries.map((entry) => entry.total),
-      articleEntries.map((entry) => entry.subTotal),
-    );
-  
-    // Apply general discount
-    const totalAfterGeneralDiscount = this.calculationsService.calculateTotalDiscount(
-      total,
-      createQuotationDto.discount,
-      createQuotationDto.discount_type,
-    );
-  
-    // Format articleEntries as lineItems for tax calculations
-    const lineItems = await this.expensearticleQuotationEntryService.findManyAsLineItem(
-      articleEntries.map((entry) => entry.id),
-    );
-  
-    // Calculate tax summary and fetch tax details in parallel
-    const taxSummary = await Promise.all(
-      this.calculationsService.calculateTaxSummary(lineItems).map(async (item) => {
-        const tax = await this.taxService.findOneById(item.taxId);
-  
-        return {
-          ...item,
-          label: tax.label,
-          value: tax.isRate ? tax.value * 100 : tax.value,
-          isRate: tax.isRate,
-        };
-      }),
-    );
-  
-    // Fetch the latest sequential number for quotation
-    const sequential = await this.expensequotationSequenceService.getSequential();
-  
-    // Save quotation metadata
-    const expensequotationMetaData = await this.expensequotationMetaDataService.save({
-      ...createQuotationDto.expensequotationMetaData,
-      taxSummary,
-    });
-  
-    // Save the quotation entity
-    const quotation = await this.expensequotationRepository.save({
-      ...createQuotationDto,
-      bankAccountId: bankAccount ? bankAccount.id : null,
-      currencyId: currency ? currency.id : firm.currencyId,
-      sequential,
-      expensearticleQuotationEntries: articleEntries,
-      expensequotationMetaData,
-      subTotal,
-      total: totalAfterGeneralDiscount,
-    });
-  
-    // Handle file uploads if they exist
-    if (createQuotationDto.uploads) {
-      await Promise.all(
-        createQuotationDto.uploads.map((u) =>
-          this.expensequotationUploadService.save(quotation.id, u.uploadId),
-        ),
+      // Calcul des totaux
+      const { subTotal, total } = this.calculationsService.calculateLineItemsTotal(
+        articleEntries.map(entry => entry.total),
+        articleEntries.map(entry => entry.subTotal),
       );
-    }
   
-    return quotation;
+      const totalAfterGeneralDiscount = this.calculationsService.calculateTotalDiscount(
+        total,
+        createQuotationDto.discount,
+        createQuotationDto.discount_type,
+      );
+  
+      // Récupération des lignes pour le calcul des taxes
+      const lineItems = await this.expensearticleQuotationEntryService.findManyAsLineItem(
+        articleEntries.map(entry => entry.id),
+      );
+  
+      // Calcul des taxes
+      const taxSummary = await Promise.all(
+        this.calculationsService.calculateTaxSummary(lineItems).map(async item => {
+          const tax = await this.taxService.findOneById(item.taxId);
+          return {
+            ...item,
+            label: tax.label,
+            value: tax.isRate ? tax.value * 100 : tax.value,
+            isRate: tax.isRate,
+          };
+        }),
+      );
+  
+      // Récupération du séquentiel
+      const sequential = await this.expensequotationSequenceService.getSequential();
+  
+      // Sauvegarde des métadonnées
+      const expensequotationMetaData = await this.expensequotationMetaDataService.save({
+        ...createQuotationDto.expensequotationMetaData,
+        taxSummary,
+      });
+  
+      // Sauvegarde du devis
+      const quotation = await this.expensequotationRepository.save({
+        ...createQuotationDto,
+        bankAccountId: bankAccount?.id ?? null,
+        currencyId: currency?.id ?? firm.currencyId,
+        sequential,
+        expensearticleQuotationEntries: articleEntries,
+        expensequotationMetaData,
+        subTotal,
+        total: totalAfterGeneralDiscount,
+      });
+  
+      // Gestion des fichiers joints
+      if (createQuotationDto.uploads?.length) {
+        await Promise.all(
+          createQuotationDto.uploads.map(upload =>
+            this.expensequotationUploadService.save(quotation.id, upload.uploadId),
+          ),
+        );
+      }
+  
+      return quotation;
+    } catch (error) {
+      console.error('Error saving quotation:', error);
+      throw new Error(`Failed to save quotation: ${error.message}`);
+    }
   }
 
+  
   async findOneById(id: number): Promise<ExpensQuotationEntity> {
     const expensequotation = await this.expensequotationRepository.findOne({
       where: { id },

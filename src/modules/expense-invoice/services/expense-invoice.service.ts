@@ -1,4 +1,4 @@
-import { Injectable, StreamableFile } from "@nestjs/common";
+import { Injectable, NotFoundException, StreamableFile } from "@nestjs/common";
 import { ExpenseInvoiceRepository } from "../repositories/repository/expense-invoice.repository";
 import { ExpenseArticleInvoiceEntryService } from "./expense-article-invoice-entry.service";
 import { ExpenseInvoiceUploadService } from "./expense-invoice-upload.service";
@@ -251,7 +251,8 @@ async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEnt
   );
 
   // ✅ Récupérer le numéro séquentiel correct
-  const sequentialNumbr = createInvoiceDto.sequentialNumbr || '';
+  const sequentialNumbr = createInvoiceDto.sequentialNumbr || await this.invoiceSequenceService.getSequential();
+  console.log('Sequential Number (Backend):', createInvoiceDto.sequentialNumbr);
 
 
   const invoiceMetaData = await this.invoiceMetaDataService.save({
@@ -324,10 +325,10 @@ async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEnt
       dueDate: null,
       articleInvoiceEntries: quotation.expensearticleQuotationEntries.map((entry) => {
         return {
-          unit_price: entry.unitPrice,
+          unit_price: entry.unit_price,
           quantity: entry.quantity,
           discount: entry.discount,
-          discount_type: entry.discountType,
+          discount_type: entry.discount_type,
           subTotal: entry.subTotal,
           total: entry.total,
           articleId: entry.article.id,
@@ -505,25 +506,36 @@ async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEnt
       existingInvoice.expenseInvoiceMetaData.id,
     );
   
-    // 🔹 Récupération du dernier `sequentialNumbr`
-    const lastInvoice = await this.invoiceRepository.findOne({
-      order: { sequentialNumbr: 'DESC' as any },
-    });
+    // Récupérer le dernier numéro séquentiel
+    let sequentialNumbr;
+    let maxSequential = await (await this.invoiceRepository
+      .createQueryBuilder('invoice'))
+      .select('MAX(CAST(invoice.sequentialNumbr AS UNSIGNED))', 'maxSequential')
+      .getRawOne();
   
-    let sequentialNumbr = lastInvoice?.sequentialNumbr
-      ? (parseInt(lastInvoice.sequentialNumbr, 10) + 1).toString()
-      : '1';
-  
-    // 🔹 Vérification de l'unicité de `sequentialNumbr`
-    if (sequentialNumbr) {
-      while (await this.invoiceRepository.findOne({ where: { sequentialNumbr } })) {
-        sequentialNumbr = (parseInt(sequentialNumbr, 10) + 1).toString();
-      }
+    if (!maxSequential || !maxSequential.maxSequential) {
+      sequentialNumbr = '1'; // Si aucune facture n'est trouvée, on commence à 1
+    } else {
+      // Incrémenter le numéro séquentiel
+      sequentialNumbr = (parseInt(maxSequential.maxSequential, 10) + 1).toString();
     }
   
+    // Vérifier l'unicité du numéro séquentiel
+    let sequentialExists = await this.invoiceRepository.findOne({
+      where: { sequentialNumbr },
+    });
+  
+    while (sequentialExists) {
+      sequentialNumbr = (parseInt(sequentialNumbr, 10) + 1).toString();
+      sequentialExists = await this.invoiceRepository.findOne({
+        where: { sequentialNumbr },
+      });
+    }
+  
+    // Sauvegarder la nouvelle facture avec le numéro séquentiel unique
     const invoice = await this.invoiceRepository.save({
       ...existingInvoice,
-      id: undefined,
+      id: undefined, // Créer une nouvelle facture sans l'id de l'originale
       sequentialNumbr,
       expenseInvoiceMetaData: invoiceMetaData,
       articleExpenseEntries: [],
@@ -532,6 +544,7 @@ async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEnt
       status: EXPENSE_INVOICE_STATUS.Draft,
     });
   
+    // Dupliquer les entrées de facture si nécessaire
     if (articleExpenseEntries.length > 0) {
       const articleInvoiceEntries = await this.articleInvoiceEntryService.duplicateMany(
         articleExpenseEntries.map((entry) => entry.id),
@@ -540,6 +553,7 @@ async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEnt
       invoice.articleExpenseEntries = articleInvoiceEntries;
     }
   
+    // Gérer les fichiers joints (uploads)
     const uploads = duplicateInvoiceDto.includeFiles
       ? await this.invoiceUploadService.duplicateMany(
           existingInvoice.uploads?.map((upload) => upload.id) || [],
@@ -553,6 +567,7 @@ async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEnt
     });
   }
   
+
   
   async updateMany(
     updateInvoiceDtos: ExpenseUpdateInvoiceDto[],

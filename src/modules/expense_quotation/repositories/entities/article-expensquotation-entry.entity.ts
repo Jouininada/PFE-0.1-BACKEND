@@ -12,7 +12,7 @@ export class ArticleExpensQuotationEntryEntity extends EntityHelper {
   id: number;
 
   @Column({ name: 'unit_price', type: 'float', nullable: true })
-  unitPrice: number;
+  unit_price: number;
   
 
   @Column({ type: 'float', nullable: true })
@@ -22,7 +22,7 @@ export class ArticleExpensQuotationEntryEntity extends EntityHelper {
   discount: number;
 
   @Column({ name: 'discount_type', type: 'enum', enum: DISCOUNT_TYPES, nullable: true })
-discountType: DISCOUNT_TYPES;
+discount_type: DISCOUNT_TYPES;
 
 
   @Column({ type: 'float', nullable: true })

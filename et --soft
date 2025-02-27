@@ -1,0 +1,79 @@
+[33mcommit b6f6f55bcc55b2a7749ce78d7c580eee2db955c9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Mon Feb 24 18:59:22 2025 +0100
+
+    expense payment + all + save + update
+
+[33mcommit 71d07ed4cadb85c8135fa21a0ebbfb19c02484d1[m
+Merge: 8c12120 1170b6c
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sun Feb 23 13:48:00 2025 +0100
+
+    Merge branch 'main' of https://github.com/Jouininada/PFE-0.1-VERSION
+
+[33mcommit 8c121201ec9c42fb1753c0b92d60a34947900e24[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sun Feb 23 13:47:23 2025 +0100
+
+    cc
+
+[33mcommit 1170b6ccc5992d71a71d866cb31944db16ac1838[m
+Author: maneldhaouadi <119331064+maneldhaouadi@users.noreply.github.com>
+Date:   Sun Feb 23 13:00:39 2025 +0100
+
+    BackendDernierVersion
+
+[33mcommit 99563d44ca70397f813e05494daeee5245fdda98[m
+Merge: 6eb7579 8acd0ce
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Thu Feb 20 16:26:52 2025 +0100
+
+    Merge branch 'main' of https://github.com/Jouininada/PFE-0.1-VERSION
+
+[33mcommit 6eb7579fabdcd08a8249548db100d55c898426c3[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Thu Feb 20 16:26:29 2025 +0100
+
+    nouveau commit
+
+[33mcommit 8acd0ce2fe6839847805393608cfe8cc3e07da7a[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Mon Feb 17 09:53:08 2025 +0100
+
+    Ajout des fichiers avec ajustement des fins de ligne
+
+[33mcommit 3808e5d6bab54ab03ea21e54a57a9cf48f176c7a[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Mon Feb 17 00:43:29 2025 +0100
+
+    Ajout du projet frontend
+
+[33mcommit 296649859854375c18f8d2c49b343c60b6a990b9[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sun Feb 16 14:46:11 2025 +0100
+
+    Save SaveMany Delete All List
+
+[33mcommit 975fa828561bff3b98a5d7d7348a9db8dc0730db[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sun Feb 16 13:48:22 2025 +0100
+
+    Correction du bug d'entité ExpensQuotationEntity
+
+[33mcommit ab4ba74be43474ba94950494097e7c07535d0790[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sat Feb 15 03:45:09 2025 +0100
+
+    Ajout de la fonctionnalité de gestion des articles dans la commande
+
+[33mcommit 716b9397a06a8acd3884d6fa7363e20276148aa0[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sat Feb 15 01:39:20 2025 +0100
+
+    all+save+getByid..
+
+[33mcommit 99337c2c31278ee4be2d209f8bab0fdbee6c2f6b[m
+Author: Jouininada <jouininada04@gmail.com>
+Date:   Sat Feb 15 01:37:54 2025 +0100
+
+    first commit
