@@ -100,4 +100,30 @@ export class ArticleService {
   async getTotal(): Promise<number> {
     return this.articleRepository.getTotalCount();
   }
+
+  async saveWithFilterTitle(createArticleDto: CreateArticleDto): Promise<ArticleEntity | null> {
+    try {
+      // Vérifie si un article avec le même titre existe déjà
+      const existingArticle = await this.articleRepository.findOne({
+        where: { title: createArticleDto.title },
+      });
+
+      // Si l'article existe déjà, on ne l'ajoute pas
+      if (existingArticle) {
+        console.log(`Article avec le titre "${createArticleDto.title}" existe déjà.`);
+        return null;  // L'article existe déjà, donc on retourne null
+      }
+
+      // Si l'article n'existe pas, on l'ajoute dans la base de données
+      const newArticle = this.articleRepository.create(createArticleDto);
+      return await this.articleRepository.save(newArticle);  // On sauve l'article
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de l\'article', error);
+      throw error;  // Relancer l'erreur si quelque chose ne va pas
+    }
+  }
+
+  
+  
+  
 }

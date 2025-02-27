@@ -1,25 +1,19 @@
-/* eslint-disable prettier/prettier */
 import { faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  MaxLength,
-} from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
 import { DISCOUNT_TYPES } from 'src/app/enums/discount-types.enum';
-import { CreateArticleQuotationEntryDto } from 'src/modules/quotation/dtos/article-quotation-entry.create.dto';
+import { CreateArticleExpensQuotationEntryDto } from './article-expensquotation-entry.create.dto';
 import { EXPENSQUOTATION_STATUS } from '../enums/expensquotation-status.enum';
 import { CreateExpensQuotationMetaDataDto } from './expensquotation-meta-data.create.dto';
 import { CreateExpensQuotationUploadDto } from './expensquotation-upload.create.dto';
-import { CreateArticleExpensQuotationEntryDto } from './article-expensquotation-entry.create.dto';
 
 export class CreateExpensQuotationDto {
   @ApiProperty({ example: faker.date.anytime() })
+  @IsOptional()
   date?: Date;
 
   @ApiProperty({ example: faker.date.anytime() })
+  @IsOptional()
   dueDate?: Date;
 
   @ApiProperty({
@@ -105,9 +99,9 @@ export class CreateExpensQuotationDto {
   @IsOptional()
   articleQuotationEntries?: CreateArticleExpensQuotationEntryDto[];
 
-  @ApiProperty({ type: () => CreateExpensQuotationMetaDataDto })
+  @ApiProperty({ required: false })
   @IsOptional()
-  expenseMetaDataId?: number; // Referring to expense_quotation_meta_data.id
+  expenseQuotationMetaDataId?: number; // Updated to match the naming convention
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -9,10 +9,4 @@ export class ExpenseDuplicateInvoiceDto {
   @IsBoolean()
   @IsOptional()
   includeFiles?: boolean;
-
-
-@IsOptional()
-  @IsString()
-  @MaxLength(25)
-  sequentialNumbr?: string;
 }
