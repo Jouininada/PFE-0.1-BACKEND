@@ -14,7 +14,7 @@ export class ResponseExpensePaymentInvoiceEntryDto {
     example: 1,
     type: Number,
   })
-  invoiceId?: number;
+  expenseInvoiceId?: number;
 
   @ApiProperty({
     example: '150.0',

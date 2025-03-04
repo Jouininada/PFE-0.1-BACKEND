@@ -6,7 +6,6 @@ import { BankAccountService } from "src/modules/bank-account/services/bank-accou
 import { CurrencyService } from "src/modules/currency/services/currency.service";
 import { FirmService } from "src/modules/firm/services/firm.service";
 import { InterlocutorService } from "src/modules/interlocutor/services/interlocutor.service";
-import { ExpenseInvoiceSequenceService } from "./expense-invoice-sequence.service";
 import { ExpenseInvoiceMetaDataService } from "./expense-invoice-meta-data.service";
 import { TaxService } from "src/modules/tax/services/tax.service";
 import { TaxWithholdingService } from "src/modules/tax-withholding/services/tax-withholding.service";
@@ -21,19 +20,12 @@ import { FindManyOptions, FindOneOptions, UpdateResult } from "typeorm";
 import { PageDto } from "src/common/database/dtos/database.page.dto";
 import { ExpenseResponseInvoiceDto } from "../dtos/expense-invoice.response.dto";
 import { PageMetaDto } from "src/common/database/dtos/database.page-meta.dto";
-import { ExpenseResponseInvoiceRangeDto } from "../dtos/expense-invoice-range.response.dto";
-import { parseSequential } from "src/utils/sequence.utils";
 import { Transactional } from "@nestjs-cls/transactional";
 import { ExpenseCreateInvoiceDto } from "../dtos/expense-invoice-create.dto";
 import { EXPENSE_INVOICE_STATUS } from "../enums/expense-invoice-status.enum";
 import { ExpenseUpdateInvoiceDto } from "../dtos/expense-invoice.update.dto";
-import { ExpenseArticleInvoiceEntryEntity } from "../repositories/entities/expense-article-invoice-entry.entity";
-import { ciel } from "src/utils/number.utils";
-import { ExpenseResponseInvoiceUploadDto } from "../dtos/expense-invoice-upload.response.dto";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { ExpenseDuplicateInvoiceDto } from "../dtos/expense-invoice.duplicate.dto";
-import { ExpenseUpdateInvoiceSequenceDto } from "../dtos/expense-invoice-sequence.update.dto";
-import { ExpenseInvoiceSequence } from "../interfaces/expense-invoice-sequence.interface";
 import { ExpensQuotationEntity } from "src/modules/expense_quotation/repositories/entities/expensquotation.entity";
 
 @Injectable()
@@ -48,7 +40,6 @@ export class ExpenseInvoiceService {
     private readonly currencyService: CurrencyService,
     private readonly firmService: FirmService,
     private readonly interlocutorService: InterlocutorService,
-    private readonly invoiceSequenceService: ExpenseInvoiceSequenceService,
     private readonly invoiceMetaDataService: ExpenseInvoiceMetaDataService,
     private readonly taxService: TaxService,
     private readonly taxWithholdingService: TaxWithholdingService,
@@ -57,51 +48,7 @@ export class ExpenseInvoiceService {
     private readonly calculationsService: InvoicingCalculationsService,
     private readonly pdfService: PdfService,
   ) {}
-
-  async downloadPdf(id: number, template: string): Promise<StreamableFile> {
-    const invoice = await this.findOneByCondition({
-      filter: `id||$eq||${id}`,
-      join: new String().concat(
-        'firm,',
-        'cabinet,',
-        'currency,',
-        'bankAccount,',
-        'interlocutor,',
-        'cabinet.address,',
-        'expenseInvoiceMetaData,',
-        'firm.deliveryAddress,',
-        'firm.invoicingAddress,',
-        'articleExpenseEntries,',
-        'articleExpenseEntries.article,',
-        'articleExpenseEntries.expenseArticleInvoiceEntryTaxes,',  // Corrigé ici
-        'articleExpenseEntries.expenseArticleInvoiceEntryTaxes.tax'  // Corrigé ici
-      ),
-    });
-  
-    const digitsAferComma = invoice.currency.digitAfterComma;
-    if (invoice) {
-      const data = {
-        meta: {
-          ...invoice.expenseInvoiceMetaData,
-          type: 'DEVIS',
-        },
-        invoice: {
-          ...invoice,
-          date: format(invoice.date, 'dd/MM/yyyy'),
-          dueDate: format(invoice.dueDate, 'dd/MM/yyyy'),
-          taxSummary: invoice.expenseInvoiceMetaData.taxSummary,
-          subTotal: invoice.subTotal.toFixed(digitsAferComma),
-          total: invoice.total.toFixed(digitsAferComma),
-        },
-      };
-  
-      const pdfBuffer = await this.pdfService.generatePdf(data, template);
-      return new StreamableFile(pdfBuffer);
-    } else {
-      throw new ExpenseInvoiceNotFoundException();
-    }
-  }  
-
+ 
   async findOneById(id: number): Promise<ExpenseInvoiceEntity> {
     const invoice = await this.invoiceRepository.findOneById(id);
     if (!invoice) {
@@ -154,35 +101,6 @@ export class ExpenseInvoiceService {
     return new PageDto(entities, pageMetaDto);
   }
 
-  async findInvoicesByRange(id: number): Promise<ExpenseResponseInvoiceRangeDto> {
-    // Get the current sequential
-    const currentSequential = await this.invoiceSequenceService.get();
-    const lastSequence = currentSequential.value.next - 1;
-
-    // fetch the invoice
-    const invoice = await this.findOneById(id);
-    const { next } = parseSequential(invoice.sequential);
-
-    // determine the previous and next invoices
-    const previousInvoice =
-      next != 1
-        ? await this.findOneByCondition({
-            filter: `sequential||$ends||${next - 1}`,
-          })
-        : null;
-
-    const nextInvoice =
-      next != lastSequence
-        ? await this.findOneByCondition({
-            filter: `sequential||$ends||${next + 1}`,
-          })
-        : null;
-
-    return {
-      next: nextInvoice,
-      previous: previousInvoice,
-    };
-  }
 
   @Transactional()
   async save(createInvoiceDto: ExpenseCreateInvoiceDto): Promise<ExpenseInvoiceEntity> {
@@ -251,7 +169,7 @@ export class ExpenseInvoiceService {
     );
   
     // ✅ Récupérer le numéro séquentiel correct
-    const sequentialNumbr = createInvoiceDto.sequentialNumbr || await this.invoiceSequenceService.getSequential();
+    const sequentialNumbr = createInvoiceDto.sequentialNumbr || null;
     console.log('Sequential Number (Backend):', createInvoiceDto.sequentialNumbr);
   
     // Utilisez sequentialNumbr dans l'insertion de la facture
@@ -290,7 +208,7 @@ export class ExpenseInvoiceService {
     if (createInvoiceDto.uploads) {
       await Promise.all(
         createInvoiceDto.uploads.map((u) =>
-          this.invoiceUploadService.save(invoice.id, u.uploadId),
+          this.invoiceUploadService.save(invoice.id, u.uploadId,u.filePath),
         ),
       );
     }
@@ -354,7 +272,7 @@ async update(
   }
 
   // Logique pour récupérer ou conserver le numéro séquentiel existant
-  const sequentialNumbr = updateInvoiceDto.sequentialNumbr || existingInvoice.sequentialNumbr || await this.invoiceSequenceService.getSequential();
+  const sequentialNumbr = updateInvoiceDto.sequentialNumbr || existingInvoice.sequentialNumbr || null;
 
   // Si tu as des validations supplémentaires à faire (ex : vérifier firm, bankAccount, etc.)
   const [firm, bankAccount, currency] = await Promise.all([
@@ -456,7 +374,7 @@ async update(
   if (updateInvoiceDto.uploads) {
     await Promise.all(
       updateInvoiceDto.uploads.map((u) =>
-        this.invoiceUploadService.save(updatedInvoice.id, u.uploadId),
+        this.invoiceUploadService.save(updatedInvoice.id, u.uploadId,u.filePath),
       ),
     );
   }
@@ -485,12 +403,14 @@ async update(
         existingInvoice.expenseInvoiceMetaData.id,
     );
 
-    // ✅ Exclure 'sequential' avant de dupliquer
-    const { id, sequential, ...invoiceData } = existingInvoice;
+    // ✅ Exclure 'sequential' et 'sequentialNumbr' avant de dupliquer
+    const { id, sequential, sequentialNumbr, ...invoiceData } = existingInvoice;
 
     const invoice = await this.invoiceRepository.save({
-        ...invoiceData, // Copie tout sauf 'id' et 'sequential'
+        ...invoiceData, // Copie tout sauf 'id', 'sequential' et 'sequentialNumbr'
         id: undefined, // Nouvelle facture sans l'ID original
+        sequential: null, // Ne pas conserver l'ancien numéro séquentiel
+        sequentialNumbr: null, // Ne pas copier sequentialNumbr
         expenseInvoiceMetaData: invoiceMetaData,
         articleExpenseEntries: [],
         uploads: [],
@@ -521,17 +441,13 @@ async update(
     });
 }
 
+
   async updateMany(
     updateInvoiceDtos: ExpenseUpdateInvoiceDto[],
   ): Promise<ExpenseInvoiceEntity[]> {
     return this.invoiceRepository.updateMany(updateInvoiceDtos);
   }
 
-  async updateInvoiceSequence(
-    updatedSequenceDto: ExpenseUpdateInvoiceSequenceDto,
-  ): Promise<ExpenseInvoiceSequence> {
-    return (await this.invoiceSequenceService.set(updatedSequenceDto)).value;
-  }
 
   async softDelete(id: number): Promise<ExpenseInvoiceEntity> {
     await this.findOneById(id);

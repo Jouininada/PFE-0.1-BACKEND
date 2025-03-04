@@ -27,8 +27,5 @@ export class ExpensQuotationMetaDataEntity extends EntityHelper {
 
   @Column({ type: 'json', nullable: true })
   taxSummary: any;
-
-
-
   // Soft delete and timestamps inherited from EntityHelper
 }

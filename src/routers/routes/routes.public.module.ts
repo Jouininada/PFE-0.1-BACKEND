@@ -24,6 +24,8 @@ import { DefaultConditionController } from 'src/modules/default-condition/contro
 import { DefaultConditionModule } from 'src/modules/default-condition/default-condition.module';
 import { ExpenseInvoiceController } from 'src/modules/expense-invoice/controllers/expense-invoice.controller';
 import { ExpenseInvoiceModule } from 'src/modules/expense-invoice/expense-invoice.module';
+import { ExpensePaymentConditionController } from 'src/modules/expense-payment-condition/controllers/expense-payment-condition.controller';
+import { ExpensePaymentConditionModule } from 'src/modules/expense-payment-condition/payment-condition.module';
 import { ExpensePaymentController } from 'src/modules/expense-payment/controllers/expense-payment.controller';
 import { ExpensePaymentModule } from 'src/modules/expense-payment/expense-payment.module';
 import { ExpensQuotationController } from 'src/modules/expense_quotation/controllers/expensquotation.controller';
@@ -80,7 +82,9 @@ import { UsersModule } from 'src/modules/user/user.module';
     UserController,
     ExpensQuotationController,
     ExpenseInvoiceController,
-    ExpensePaymentController
+    ExpensePaymentController,
+    ExpensePaymentConditionController
+
 
   ],
   providers: [],
@@ -112,7 +116,9 @@ import { UsersModule } from 'src/modules/user/user.module';
     UsersModule,
     ExpenseQuotationModule,
     ExpenseInvoiceModule,
-    ExpensePaymentModule
+    ExpensePaymentModule,
+    ExpensePaymentConditionModule
+
 
 
   ],

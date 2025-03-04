@@ -20,15 +20,15 @@ import { ExpenseInvoiceUploadEntity } from './expense-invoice-file.entity';
 import { TaxEntity } from 'src/modules/tax/repositories/entities/tax.entity';
 import { TaxWithholdingEntity } from 'src/modules/tax-withholding/repositories/entities/tax-withholding.entity';
 import { EXPENSE_INVOICE_STATUS } from '../../enums/expense-invoice-status.enum';
-import { PaymentInvoiceEntryEntity } from 'src/modules/payment/repositories/entities/payment-invoice-entry.entity';
 import { ExpensQuotationEntity } from 'src/modules/expense_quotation/repositories/entities/expensquotation.entity';
+import { ExpensePaymentInvoiceEntryEntity } from 'src/modules/expense-payment/repositories/entities/expense-payment-invoice-entry.entity';
 
 @Entity('expense_invoice')
 export class ExpenseInvoiceEntity extends EntityHelper {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 25, unique: true })
+  @Column({ type: 'varchar', length: 25, unique: true,nullable:true})
   sequential: string;
   
 
@@ -125,8 +125,8 @@ quotation: ExpensQuotationEntity;
   taxStampId: number;
 
   //expensepayment no payment:attention
-  @OneToMany(() => PaymentInvoiceEntryEntity, (entry) => entry.invoice)
-  payments: PaymentInvoiceEntryEntity[];
+  @OneToMany(() => ExpensePaymentInvoiceEntryEntity, (entry) => entry.expenseInvoice)
+  payments: ExpensePaymentInvoiceEntryEntity[];
 
   @ManyToOne(() => TaxWithholdingEntity)
   @JoinColumn({ name: 'taxWithholdingId' })

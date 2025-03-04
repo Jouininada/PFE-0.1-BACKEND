@@ -59,13 +59,18 @@ CREATE TABLE IF NOT EXISTS `expense_payment_invoice_entry` (
     CONSTRAINT `FK_expense_invoice_expense_payment_invoice_entry` FOREIGN KEY (`expenseInvoiceId`) REFERENCES `expense_invoice` (`id`) ON DELETE CASCADE
 );
 
+-- Modifications pour la table expense_invoice
+ALTER TABLE `expense_invoice`
+ADD COLUMN `amountPaid` float DEFAULT 0;
+
 ALTER TABLE `expense_invoice` MODIFY `status` ENUM (
-        'expense_invoice.status.non_existent',
-        'expense_invoice.status.draft',
-        'expense_invoice.status.sent',
-        'expense_invoice.status.validated',
-        'expense_invoice.status.paid',
-        'expense_invoice.status.unpaid',
-        'expense_invoice.status.expired',
-        'expense_invoice.status.archived'
+    'invoice.status.non_existent',
+    'invoice.status.draft',
+    'invoice.status.sent',
+    'invoice.status.validated',
+    'invoice.status.paid',
+    'invoice.status.partially_paid',
+    'invoice.status.unpaid',
+    'invoice.status.expired',
+    'invoice.status.archived'
 ) DEFAULT NULL;

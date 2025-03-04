@@ -21,7 +21,7 @@ export class ExpenseCreatePaymentDto {
     example: '150.0',
     type: Number,
   })
-  amountPaid?: number;
+  amount?: number;
 
   @ApiProperty({
     example: '15.0',

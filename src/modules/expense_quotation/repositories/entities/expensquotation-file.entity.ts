@@ -4,9 +4,6 @@ import {
   ManyToOne,
   JoinColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
 } from 'typeorm';
 import { EntityHelper } from 'src/common/database/interfaces/database.entity.interface';
 import { ExpensQuotationEntity } from './expensquotation.entity';
@@ -32,5 +29,7 @@ export class ExpensQuotationUploadEntity extends EntityHelper {
   @Column({ type: 'int' })
   uploadId: number;
 
-  // Soft delete and timestamps inherited from EntityHelper
+  @Column({ type: 'int', nullable: true })
+  pdfFileId: number;
+
 }

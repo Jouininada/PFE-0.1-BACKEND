@@ -83,4 +83,15 @@ BUYING_INVOICE_UPDATED = 'invoice_updated',
 BUYING_INVOICE_DELETED = 'invoice_deleted',
 BUYING_INVOICE_PRINTED = 'invoice_printed',
 BUYING_INVOICE_DUPLICATED = 'invoice_duplicated',
+
+  //BUYING Payment
+  BUYING_PAYMENT_CREATED = 'payment_created',
+  BUYING_PAYMENT_UPDATED = 'payment_updated',
+  BUYING_PAYMENT_DELETED = 'payment_deleted',
+
+  EXPENSE_PAYMENT_CONDITION_CREATED = 'payment_condition_created',
+  EXPENSE_PAYMENT_CONDITION_UPDATED = 'payment_condition_updated',
+  EXPENSE_PAYMENT_CONDITION_DELETED = 'payment_condition_deleted',
+
+
 }

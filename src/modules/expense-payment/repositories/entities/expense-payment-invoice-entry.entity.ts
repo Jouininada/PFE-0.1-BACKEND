@@ -16,7 +16,7 @@ export class ExpensePaymentInvoiceEntryEntity extends EntityHelper {
 
   @ManyToOne(() => ExpensePaymentEntity)
   @JoinColumn({ name: 'paymentId' })
-  Expensepayment: ExpensePaymentEntity;
+  payment: ExpensePaymentEntity;
 
   @Column({ name: 'paymentId', type: 'int' }) // Utilisez le nom de colonne existant
   expensePaymentId: number;
@@ -29,5 +29,5 @@ export class ExpensePaymentInvoiceEntryEntity extends EntityHelper {
   expenseInvoiceId: number;
 
   @Column({ type: 'float', nullable: true })
-  amountPaid: number;
+  amount: number;
 }

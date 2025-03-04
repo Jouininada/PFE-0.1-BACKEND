@@ -6,7 +6,6 @@ import { ArticleExpensQuotationEntryTaxService } from './services/article-expens
 import { PdfModule } from 'src/common/pdf/pdf.module';
 import { CalculationsModule } from 'src/common/calculations/calculations.module';
 import { AppConfigModule } from 'src/common/app-config/app-config.module';
-import { ExpensQuotationSequenceService } from './services/expensquotation-sequence.service';
 import { GatewaysModule } from 'src/common/gateways/gateways.module';
 import { ExpensQuotationMetaDataService } from './services/expensquotation-meta-data.service';
 import { StorageModule } from 'src/common/storage/storage.module';
@@ -27,7 +26,6 @@ import { QuotationRepositoryModule } from './repositories/expensquotation.reposi
     ExpensQuotationService,
     ExpensQuotationMetaDataService,
     ExpensQuotationUploadService,
-    ExpensQuotationSequenceService,
     ArticleExpensQuotationEntryService,
     ArticleExpensQuotationEntryTaxService,
   ],

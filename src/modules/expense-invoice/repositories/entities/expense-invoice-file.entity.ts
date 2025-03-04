@@ -27,4 +27,6 @@ export class ExpenseInvoiceUploadEntity extends EntityHelper {
 
   @Column({ type: 'int' })
   uploadId: number;
+  @Column({ type: 'int' })
+  filePath: number;
 }

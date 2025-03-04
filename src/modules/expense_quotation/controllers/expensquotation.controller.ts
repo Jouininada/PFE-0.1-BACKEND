@@ -27,6 +27,7 @@ import { CreateExpensQuotationDto } from '../dtos/expensquotation.create.dto';
 import { LogEvent } from 'src/common/logger/decorators/log-event.decorator';
 import { EVENT_TYPE } from 'src/app/enums/logger/event-types.enum';
 import { UpdateExpensQuotationDto } from '../dtos/expensquotation.update.dto';
+import { DuplicateExpensQuotationDto } from '../dtos/expensquotation.duplicate.dto';
 
 
 @ApiTags('expensquotation')
@@ -88,7 +89,7 @@ async findAll(
   ): Promise<ResponseExpensQuotationDto> {
     return await this.expensQuotationService.save(createExpensQuotationDto);
   }
-/*
+
   
   @Post('/duplicate')
   async duplicate(
@@ -96,7 +97,7 @@ async findAll(
   ): Promise<ResponseExpensQuotationDto> {
     return await this.expensQuotationService.duplicate(duplicateExpensQuotationDto);
   }
-*/
+
 
 @Delete('/delete/:id')
   @LogEvent(EVENT_TYPE.BUYING_QUOTATION_DELETED)

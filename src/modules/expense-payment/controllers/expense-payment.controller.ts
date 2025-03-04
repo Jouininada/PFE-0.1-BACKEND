@@ -20,7 +20,6 @@ import { LogEvent } from 'src/common/logger/decorators/log-event.decorator';
 import { Request as ExpressRequest } from 'express';
 import { ExpensePaymentService } from '../services/expense-payment.service';
 import { ResponseExpensePaymentDto } from '../dtos/expense-payment.response.dto';
-import { CreateExpensePaymentUploadDto } from '../dtos/expense-payment-upload.create.dto';
 import { UpdateExpensePaymentDto } from '../dtos/expense-payment.update.dto';
 import { ExpenseCreatePaymentDto } from '../dtos/expense-payment.create.dto';
 
@@ -63,7 +62,7 @@ export class ExpensePaymentController {
   }
 
   @Post('/save')
-  @LogEvent(EVENT_TYPE.SELLING_PAYMENT_CREATED)
+  @LogEvent(EVENT_TYPE.BUYING_PAYMENT_CREATED)
   async save(
     @Body() createPaymentDto: ExpenseCreatePaymentDto,
     @Request() req: ExpressRequest,
@@ -79,7 +78,7 @@ export class ExpensePaymentController {
     required: true,
   })
   @Put('/:id')
-  @LogEvent(EVENT_TYPE.SELLING_PAYMENT_UPDATED)
+  @LogEvent(EVENT_TYPE.BUYING_PAYMENT_UPDATED)
   async update(
     @Param('id') id: number,
     @Body() updateActivityDto: UpdateExpensePaymentDto,
@@ -95,7 +94,7 @@ export class ExpensePaymentController {
     required: true,
   })
   @Delete('/:id')
-  @LogEvent(EVENT_TYPE.SELLING_PAYMENT_DELETED)
+  @LogEvent(EVENT_TYPE.BUYING_PAYMENT_DELETED)
   async delete(
     @Param('id') id: number,
     @Request() req: ExpressRequest,

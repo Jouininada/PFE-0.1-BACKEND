@@ -70,26 +70,31 @@ export class ExpenseInvoiceUploadService {
   async save(
     invoiceId: number,
     uploadId: number,
+    filePath: number, // Ajout du paramètre filePath
   ): Promise<ExpenseInvoiceUploadEntity> {
     return this.invoiceUploadRepository.save({
-      expenseInvoice: { id: invoiceId }, // corrected: using the entity reference
+      expenseInvoice: { id: invoiceId },
       uploadId,
+      filePath, // Assurez-vous d'ajouter le filePath ici
     });
   }
+  
 
   async duplicate(id: number, invoiceId: number): Promise<ExpenseInvoiceUploadEntity> {
     const originalInvoiceUpload = await this.findOneById(id);
     const duplicatedUpload = await this.storageService.duplicate(
       originalInvoiceUpload.uploadId,
     );
-
+  
     const duplicatedInvoiceUploadEntity = await this.invoiceUploadRepository.save({
       expenseInvoice: { id: invoiceId },
       uploadId: duplicatedUpload.id,
+      filePath: originalInvoiceUpload.filePath, // Copie du filePath de l'original
     });
-
+  
     return duplicatedInvoiceUploadEntity;
   }
+  
 
   async duplicateMany(
     ids: number[],

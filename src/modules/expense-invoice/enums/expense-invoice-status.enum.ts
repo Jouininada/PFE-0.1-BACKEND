@@ -1,7 +1,6 @@
 export enum EXPENSE_INVOICE_STATUS {
     Nonexistent = 'expense_invoice.status.non_existent',
     Draft = 'expense_invoice.status.draft',
-    Sent = 'expense_invoice.status.sent',
     Validated = 'expense_invoice.status.validated',
     Paid = 'expense_invoice.status.paid',
     PartiallyPaid = 'expense_invoice.status.partially_paid',

@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsOptional } from 'class-validator';
 
 export class CreateExpensQuotationUploadDto {
   @ApiProperty({
@@ -7,4 +8,8 @@ export class CreateExpensQuotationUploadDto {
     type: Number,
   })
   uploadId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  pdfFileId?: number;
 }

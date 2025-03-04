@@ -36,61 +36,62 @@ export class ExpensePaymentInvoiceEntryService {
   }
 
   @Transactional()
-  async save(createPaymentInvoiceEntryDto: ExpenseCreatePaymentInvoiceEntryDto): Promise<ExpensePaymentInvoiceEntryEntity> {
-    // Récupérer la facture existante
-    const existingInvoice = await this.expenseInvoiceService.findOneByCondition({
-      filter: `id||$eq||${createPaymentInvoiceEntryDto.expenseInvoiceId}`,
-      join: 'currency',
-    });
-  
-    // Vérifier que la facture existe
-    if (!existingInvoice) {
-      throw new Error(`Invoice with ID ${createPaymentInvoiceEntryDto.expenseInvoiceId} not found`);
-    }
-  
-    // Vérifier que amountPaid existe
-    if (existingInvoice.amountPaid === null || existingInvoice.amountPaid === undefined) {
-      throw new Error(`Invoice amountPaid is null or undefined for invoice ID ${existingInvoice.id}`);
-    }
-  
-    // Continuer avec la logique de sauvegarde
-    const zero = dinero({
-      amount: createDineroAmountFromFloatWithDynamicCurrency(0, createPaymentInvoiceEntryDto.digitAfterComma),
-      precision: createPaymentInvoiceEntryDto.digitAfterComma,
-    });
-  
-    const amountAlreadyPaid = dinero({
-      amount: createDineroAmountFromFloatWithDynamicCurrency(existingInvoice.amountPaid, existingInvoice.currency.digitAfterComma),
-      precision: existingInvoice.currency.digitAfterComma,
-    });
-  
-    const amountToBePaid = dinero({
-      amount: createDineroAmountFromFloatWithDynamicCurrency(createPaymentInvoiceEntryDto.amountPaid, createPaymentInvoiceEntryDto.digitAfterComma),
-      precision: createPaymentInvoiceEntryDto.digitAfterComma,
-    });
-  
-    const totalAmountPaid = amountAlreadyPaid.add(amountToBePaid);
-  
-    const invoiceTotal = dinero({
-      amount: createDineroAmountFromFloatWithDynamicCurrency(existingInvoice.total, existingInvoice.currency.digitAfterComma),
-      precision: existingInvoice.currency.digitAfterComma,
-    });
-  
-    const newInvoiceStatus =
-      totalAmountPaid.equalsTo(zero)
-        ? EXPENSE_INVOICE_STATUS.Unpaid
-        : totalAmountPaid.equalsTo(invoiceTotal)
-          ? EXPENSE_INVOICE_STATUS.Paid
-          : EXPENSE_INVOICE_STATUS.PartiallyPaid;
-  
-    await this.expenseInvoiceService.updateFields(existingInvoice.id, {
-      amountPaid: totalAmountPaid.toUnit(),
-      status: newInvoiceStatus,
-    });
-  
-    return this.expensePaymentInvoiceEntryRepository.save(createPaymentInvoiceEntryDto);
+async save(createPaymentInvoiceEntryDto: ExpenseCreatePaymentInvoiceEntryDto): Promise<ExpensePaymentInvoiceEntryEntity> {
+  // Récupérer la facture existante
+  const existingInvoice = await this.expenseInvoiceService.findOneByCondition({
+    filter: `id||$eq||${createPaymentInvoiceEntryDto.expenseInvoiceId}`,
+    join: 'currency',
+  });
+
+  // Vérifier que la facture existe
+  if (!existingInvoice) {
+    throw new Error(`Invoice with ID ${createPaymentInvoiceEntryDto.expenseInvoiceId} not found`);
   }
 
+  // Set default value for amountPaid if it is null or undefined
+  if (existingInvoice.amountPaid === null || existingInvoice.amountPaid === undefined) {
+    existingInvoice.amountPaid = 0;
+  }
+
+  // Continuer avec la logique de sauvegarde
+  const zero = dinero({
+    amount: createDineroAmountFromFloatWithDynamicCurrency(0, createPaymentInvoiceEntryDto.digitAfterComma),
+    precision: createPaymentInvoiceEntryDto.digitAfterComma,
+  });
+
+  const amountAlreadyPaid = dinero({
+    amount: createDineroAmountFromFloatWithDynamicCurrency(existingInvoice.amountPaid, existingInvoice.currency.digitAfterComma),
+    precision: existingInvoice.currency.digitAfterComma,
+  });
+
+  const amountToBePaid = dinero({
+    amount: createDineroAmountFromFloatWithDynamicCurrency(createPaymentInvoiceEntryDto.amount, createPaymentInvoiceEntryDto.digitAfterComma),
+    precision: createPaymentInvoiceEntryDto.digitAfterComma,
+  });
+
+  const totalAmountPaid = amountAlreadyPaid.add(amountToBePaid);
+
+  const invoiceTotal = dinero({
+    amount: createDineroAmountFromFloatWithDynamicCurrency(existingInvoice.total, existingInvoice.currency.digitAfterComma),
+    precision: existingInvoice.currency.digitAfterComma,
+  });
+
+  const newInvoiceStatus =
+    totalAmountPaid.equalsTo(zero)
+      ? EXPENSE_INVOICE_STATUS.Unpaid
+      : totalAmountPaid.equalsTo(invoiceTotal)
+        ? EXPENSE_INVOICE_STATUS.Paid
+        : EXPENSE_INVOICE_STATUS.PartiallyPaid;
+
+  const result = await this.expenseInvoiceService.updateFields(existingInvoice.id, {
+    amountPaid: totalAmountPaid.toUnit(),
+    status: newInvoiceStatus,
+  });
+
+  console.log('Update result:', result);
+
+  return this.expensePaymentInvoiceEntryRepository.save(createPaymentInvoiceEntryDto);
+}
   @Transactional()
   async saveMany(
     createPaymentInvoiceEntryDtos: ExpenseCreatePaymentInvoiceEntryDto[],
@@ -127,7 +128,7 @@ export class ExpensePaymentInvoiceEntryService {
     const existingEntry = await this.findOneById(id);
 
     const existingInvoice = await this.expenseInvoiceService.findOneByCondition({
-      filter: `id||$eq||${existingEntry.invoiceId}`,
+      filter: `id||$eq||${existingEntry.expenseInvoiceId}`,
       join: 'currency',
     });
 
@@ -149,7 +150,7 @@ export class ExpensePaymentInvoiceEntryService {
 
     const updatedEntryAmount = dinero({
       amount: createDineroAmountFromFloatWithDynamicCurrency(
-        updatePaymentInvoiceEntryDto.amountPaid,
+        updatePaymentInvoiceEntryDto.amount,
         existingInvoice.currency.digitAfterComma,
       ),
       precision: existingInvoice.currency.digitAfterComma,
@@ -230,7 +231,7 @@ export class ExpensePaymentInvoiceEntryService {
 
     const amountToDeduct = dinero({
       amount: createDineroAmountFromFloatWithDynamicCurrency(
-        existingEntry.amountPaid,
+        existingEntry.amount,
         existingInvoice.currency.digitAfterComma,
       ),
       precision: existingInvoice.currency.digitAfterComma,

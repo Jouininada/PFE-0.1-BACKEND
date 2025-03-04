@@ -13,7 +13,7 @@ export class ExpenseCreatePaymentInvoiceEntryDto {
     type: Number,
   })
   @IsPositive()
-  amountPaid?: number;
+  amount?: number;
 
   @ApiProperty({
     example: 1,

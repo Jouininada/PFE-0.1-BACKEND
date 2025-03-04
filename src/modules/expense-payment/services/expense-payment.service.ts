@@ -101,8 +101,8 @@ async save(createPaymentDto: ExpenseCreatePaymentDto): Promise<ExpensePaymentEnt
         console.log('Invoice found:', invoice);
         return {
           paymentId: payment.id,
-          invoiceId: entry.expenseInvoiceId,
-          amount: entry.amountPaid * (invoice.currencyId !== payment.currencyId ? payment.convertionRate : 1),
+          expenseInvoiceId: entry.expenseInvoiceId,
+          amount: entry.amount * (invoice.currencyId !== payment.currencyId ? payment.convertionRate : 1),
           digitAfterComma: currency.digitAfterComma,
         };
       }),
@@ -184,9 +184,9 @@ async update(
       const invoice = await this.expenseInvoiceService.findOneById(entry.expenseInvoiceId);
       return {
         paymentId: payment.id,
-        invoiceId: entry.expenseInvoiceId,
+        expenseInvoiceId: entry.expenseInvoiceId,
         amount:
-          entry.amountPaid *
+          entry.amount *
           (invoice.currencyId !== payment.currencyId ? payment.convertionRate : 1),
         digitAfterComma: currency.digitAfterComma,
       };

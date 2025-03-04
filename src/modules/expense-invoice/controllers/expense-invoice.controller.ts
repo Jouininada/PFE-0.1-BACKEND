@@ -22,11 +22,8 @@ import {
 import { ExpenseResponseInvoiceDto } from '../dtos/expense-invoice.response.dto';
 import { ExpenseCreateInvoiceDto } from '../dtos/expense-invoice-create.dto';
 import { ExpenseDuplicateInvoiceDto } from '../dtos/expense-invoice.duplicate.dto';
-import { ExpenseUpdateInvoiceSequenceDto } from '../dtos/expense-invoice-sequence.update.dto';
-import { ExpenseInvoiceSequence } from '../interfaces/expense-invoice-sequence.interface';
 import { ExpenseUpdateInvoiceDto } from '../dtos/expense-invoice.update.dto';
 import { ExpenseInvoiceService } from '../services/expense-invoice.service';
-import { ExpenseResponseInvoiceRangeDto } from '../dtos/expense-invoice-range.response.dto';
   
   @ApiTags('expenseinvoice')
   @Controller({
@@ -50,12 +47,6 @@ import { ExpenseResponseInvoiceRangeDto } from '../dtos/expense-invoice-range.re
       return this.invoiceService.findAllPaginated(query);
     }
   
-    @Get('/sequential-range/:id')
-async findInvoicesByRange(
-  @Param('id') id: number,
-): Promise<ExpenseResponseInvoiceRangeDto> {  // ✅ Correction ici
-  return this.invoiceService.findInvoicesByRange(id);
-}
 
   
     @Get('/:id')
@@ -74,18 +65,6 @@ async findInvoicesByRange(
       return this.invoiceService.findOneByCondition(query);
     }
   
-    @Get('/:id/download')
-    @Header('Content-Type', 'application/json')
-    @Header('Content-Disposition', 'attachment; filename="invoice.pdf"')
-    @LogEvent(EVENT_TYPE.BUYING_INVOICE_PRINTED)
-    async generatePdf(
-      @Param('id') id: number,
-      @Query() query: { template: string },
-      @Request() req: ExpressRequest,
-    ) {
-      req.logInfo = { id };
-      return this.invoiceService.downloadPdf(id, query.template);
-    }
   
     @Post('')
     @LogEvent(EVENT_TYPE.BUYING_INVOICE_CREATED)
@@ -114,12 +93,7 @@ async findInvoicesByRange(
       type: 'number',
       required: true,
     })
-    @Put('/update-invoice-sequences')
-    async updateInvoiceSequences(
-      @Body() updatedSequenceDto: ExpenseUpdateInvoiceSequenceDto,
-    ): Promise<ExpenseInvoiceSequence> {
-      return this.invoiceService.updateInvoiceSequence(updatedSequenceDto);
-    }
+  
   
     @ApiParam({
       name: 'id',

@@ -7,11 +7,11 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { PAYMENT_MODE } from '../../enums/expense-payment-mode.enum';
 import { CurrencyEntity } from 'src/modules/currency/repositories/entities/currency.entity';
 import { FirmEntity } from 'src/modules/firm/repositories/entities/firm.entity';
 import { ExpensePaymentUploadEntity } from './expense-payment-file.entity';
 import { ExpensePaymentInvoiceEntryEntity } from './expense-payment-invoice-entry.entity';
+import { PAYMENT_MODE } from '../../enums/expense-payment-mode.enum';
 
 @Entity('expense_payment')
 export class ExpensePaymentEntity extends EntityHelper {
@@ -19,7 +19,7 @@ export class ExpensePaymentEntity extends EntityHelper {
   id: number;
 
   @Column({ type: 'float', nullable: true })
-  amountPaid: number;
+  amount: number;
 
   @Column({ type: 'float', nullable: true })
   fee: number;
@@ -46,7 +46,7 @@ export class ExpensePaymentEntity extends EntityHelper {
   @OneToMany(() => ExpensePaymentUploadEntity, (upload) => upload.expensePayment)
   uploads: ExpensePaymentUploadEntity[];
 
-  @OneToMany(() => ExpensePaymentInvoiceEntryEntity, (expenseInvoice) => expenseInvoice.Expensepayment)
+  @OneToMany(() => ExpensePaymentInvoiceEntryEntity, (expenseInvoice) => expenseInvoice.payment)
   invoices: ExpensePaymentInvoiceEntryEntity[];
 
   @ManyToOne(() => FirmEntity)

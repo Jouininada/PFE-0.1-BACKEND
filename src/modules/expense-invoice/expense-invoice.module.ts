@@ -14,7 +14,6 @@ import { TaxWithholdingModule } from '../tax-withholding/tax-withholding.module'
 import { ExpenseInvoiceService } from './services/expense-invoice.service';
 import { ExpenseInvoiceMetaDataService } from './services/expense-invoice-meta-data.service';
 import { ExpenseInvoiceUploadService } from './services/expense-invoice-upload.service';
-import { ExpenseInvoiceSequenceService } from './services/expense-invoice-sequence.service';
 import { ExpenseArticleInvoiceEntryService } from './services/expense-article-invoice-entry.service';
 import { ExpenseArticleInvoiceEntryTaxService } from './services/expense-article-invoice-entry-tax.service';
 import { ExpenseInvoiceRepositoryModule } from './repositories/expense-invoice.repository.module';
@@ -25,7 +24,6 @@ import { ExpenseInvoiceRepositoryModule } from './repositories/expense-invoice.r
     ExpenseInvoiceService,
     ExpenseInvoiceMetaDataService,
     ExpenseInvoiceUploadService,
-    ExpenseInvoiceSequenceService,
     ExpenseArticleInvoiceEntryService,
     ExpenseArticleInvoiceEntryTaxService,
   ],

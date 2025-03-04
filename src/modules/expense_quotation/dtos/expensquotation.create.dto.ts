@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { DISCOUNT_TYPES } from 'src/app/enums/discount-types.enum';
 import { CreateArticleExpensQuotationEntryDto } from './article-expensquotation-entry.create.dto';
 import { EXPENSQUOTATION_STATUS } from '../enums/expensquotation-status.enum';
@@ -114,4 +114,12 @@ export class CreateExpensQuotationDto {
   @ApiProperty({ type: () => CreateExpensQuotationMetaDataDto })
   @IsOptional()
   expensequotationMetaData?: CreateExpensQuotationMetaDataDto;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(25)
+  sequentialNumbr?: string;
+
+ 
+
 }

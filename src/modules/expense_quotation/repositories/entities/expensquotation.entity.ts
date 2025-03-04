@@ -18,7 +18,7 @@ export class ExpensQuotationEntity extends EntityHelper {
   @PrimaryGeneratedColumn()
     id: number;
   
-    @Column({ type: 'varchar', length: 25, unique: true })
+    @Column({ type: 'varchar', length: 25, unique: true,nullable:true })
     sequential: string;
   
     @Column({ nullable: true })
@@ -109,4 +109,7 @@ expensearticleQuotationEntries: ArticleExpensQuotationEntryEntity[];
   @OneToMany(() => ExpenseInvoiceEntity, (invoice) => invoice.quotation)
 
   invoices: ExpenseInvoiceEntity[];
+
+  @Column({ type: 'varchar', length: 25, nullable: true })
+  sequentialNumbr: string;
 }
