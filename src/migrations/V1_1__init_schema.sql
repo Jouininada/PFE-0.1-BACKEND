@@ -50,17 +50,24 @@ CREATE TABLE
         CONSTRAINT `FK_countryId` FOREIGN KEY (`countryId`) REFERENCES `country` (`id`) ON DELETE SET NULL
     );
 
-CREATE TABLE
-    IF NOT EXISTS `article` (
-        `id` int NOT NULL AUTO_INCREMENT,
-        `title` varchar(50) DEFAULT NULL,
-        `description` varchar(255) DEFAULT NULL,
-        `createdAt` TIMESTAMP DEFAULT NOW(),
-        `updatedAt` TIMESTAMP DEFAULT NOW(),
-        `deletedAt` TIMESTAMP DEFAULT NULL,
-        `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
-        PRIMARY KEY (`id`)
-    );
+CREATE TABLE IF NOT EXISTS `article` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(50) DEFAULT NULL,
+    `description` VARCHAR(255) DEFAULT NULL,
+    `quantityInStock` INT NOT NULL DEFAULT 0,
+    `qrCode` VARCHAR(255) DEFAULT NULL,
+    `sku` VARCHAR(50) NOT NULL,
+    `subCategory` VARCHAR(50) DEFAULT NULL,
+    `purchasePrice` DECIMAL(10,2) NOT NULL,
+    `salePrice` DECIMAL(10,2) NOT NULL,
+    `category` VARCHAR(50) NOT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deletedAt` TIMESTAMP NULL DEFAULT NULL,
+    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (`id`)
+);
+
 
 CREATE TABLE
     IF NOT EXISTS `currency` (
