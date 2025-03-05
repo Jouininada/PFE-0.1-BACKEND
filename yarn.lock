@@ -1478,6 +1478,13 @@
     "@types/connect" "*"
     "@types/node" "*"
 
+"@types/bwip-js@^3.2.3":
+  version "3.2.3"
+  resolved "https://registry.yarnpkg.com/@types/bwip-js/-/bwip-js-3.2.3.tgz#02e9a48e07b89e65b5b90a2fdc0ce8213a53b599"
+  integrity sha512-kgL1GOW7n5FhlC5aXnckaEim0rz1cFM4t9/xUwuNXCIDnWLx8ruQ4JQkG6znq4GQFovNLhQy5JdgbDwJw4D/zg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/bytes@^3.1.4":
   version "3.1.5"
   resolved "https://registry.npmjs.org/@types/bytes/-/bytes-3.1.5.tgz#22fb92839f37bd5490e0dcd411999bb1c16ddaa0"
@@ -1737,6 +1744,13 @@
     "@types/node" "*"
     pg-protocol "*"
     pg-types "^2.2.0"
+
+"@types/qrcode@^1.5.5":
+  version "1.5.5"
+  resolved "https://registry.yarnpkg.com/@types/qrcode/-/qrcode-1.5.5.tgz#993ff7c6b584277eee7aac0a20861eab682f9dac"
+  integrity sha512-CdfBi/e3Qk+3Z/fXYShipBT13OJ2fDO2Q2w5CIP5anLTLIndQG9z6P1cnm+8zCWSpm5dnxMFd/uREtb0EXuQzg==
+  dependencies:
+    "@types/node" "*"
 
 "@types/qs@*":
   version "6.9.18"
@@ -2653,7 +2667,7 @@ busboy@^1.0.0:
 
 bwip-js@^4.5.1:
   version "4.5.1"
-  resolved "https://registry.npmjs.org/bwip-js/-/bwip-js-4.5.1.tgz#005eb0372409e26d0347aca3494ddaf6e0411564"
+  resolved "https://registry.yarnpkg.com/bwip-js/-/bwip-js-4.5.1.tgz#005eb0372409e26d0347aca3494ddaf6e0411564"
   integrity sha512-83yQCKiIftz5YonnsTh6wIkFoHHWl+B/XaGWD1UdRw7aB6XP9JtyYP9n8sRy3m5rzL+Ch/RUPnu28UW0RrPZUA==
 
 bytes@3.1.2, bytes@^3.1.2:
@@ -4570,6 +4584,7 @@ inquirer@9.2.15:
     "@sentry/tracing" "^7.114.0"
     bcrypt "^5.1.1"
     bcryptjs "^2.4.3"
+    bwip-js "^4.5.1"
     cheerio "^1.0.0-rc.12"
     class-transformer "^0.5.1"
     class-validator "^0.14.1"
@@ -4580,7 +4595,7 @@ inquirer@9.2.15:
     exceljs "^4.4.0"
     geolib "^3.3.4"
     helmet "^7.1.0"
-    invoice-sys-api "file:C:/Users/extra/AppData/Local/Yarn/Cache/v6/npm-invoice-sys-api-0.0.1-6e775d2f-f19c-4d17-bab5-088bc03c5c12-1740949128296/node_modules/invoice-sys-api"
+    invoice-sys-api "file:../../AppData/Local/Yarn/Cache/v6/npm-invoice-sys-api-0.0.1-7c75d30f-c4e5-4f63-8d10-f76cc81c9932-1741190967575/node_modules/invoice-sys-api"
     moment "^2.30.1"
     morgan "^1.10.0"
     multer "^1.4.5-lts.1"
@@ -6462,7 +6477,7 @@ pure-rand@^6.0.0:
 
 qrcode@^1.5.4:
   version "1.5.4"
-  resolved "https://registry.npmjs.org/qrcode/-/qrcode-1.5.4.tgz#5cb81d86eb57c675febb08cf007fff963405da88"
+  resolved "https://registry.yarnpkg.com/qrcode/-/qrcode-1.5.4.tgz#5cb81d86eb57c675febb08cf007fff963405da88"
   integrity sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==
   dependencies:
     dijkstrajs "^1.0.1"

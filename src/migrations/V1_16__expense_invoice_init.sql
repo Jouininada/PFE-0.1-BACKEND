@@ -17,23 +17,14 @@ CREATE TABLE IF NOT EXISTS `expense_invoice_meta_data` (
 
 CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `id` int NOT NULL AUTO_INCREMENT,
-    `sequential` varchar(25) NOT NULL UNIQUE,
+    `sequential` varchar(25) DEFAULT NULL,
     `date` datetime DEFAULT NULL,
     `dueDate` datetime DEFAULT NULL,
     `object` varchar(255) DEFAULT NULL,
     `generalConditions` varchar(1024) DEFAULT NULL,
-    `status` enum (
-        'expense_invoice.status.non_existent',
-        'expense_invoice.status.draft',
-        'expense_invoice.status.sent',
-        'expense_invoice.status.validated',
-        'expense_invoice.status.paid',
-        'expense_invoice.status.unpaid',
-        'expense_invoice.status.expired',
-        'expense_invoice.status.archived'
-    ) DEFAULT NULL,
+    `status` varchar(255) DEFAULT NULL, -- Changé de ENUM à varchar(255)
     `discount` float DEFAULT NULL,
-    `discount_type` enum ('PERCENTAGE', 'AMOUNT') DEFAULT NULL,
+    `discount_type` enum('PERCENTAGE', 'AMOUNT') DEFAULT NULL,
     `subTotal` float DEFAULT NULL,
     `total` float DEFAULT NULL,
     `currencyId` int NOT NULL,
@@ -44,26 +35,29 @@ CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `notes` varchar(1024) DEFAULT NULL,
     `bankAccountId` int DEFAULT NULL,
     `amountPaid` float DEFAULT NULL,
-    `taxWithholdingId` INT DEFAULT NULL,
-    `taxWithholdingAmount` FLOAT DEFAULT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
-    `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `taxWithholdingId` int DEFAULT NULL,
+    `taxWithholdingAmount` float DEFAULT NULL,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP, -- Changé de NOW() à CURRENT_TIMESTAMP
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP, -- Changé de NOW() à CURRENT_TIMESTAMP
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0', -- Changé de BOOLEAN à tinyint(1)
+    `sequentialNumbr` varchar(25) DEFAULT NULL, -- Ajouté
     PRIMARY KEY (`id`),
+    UNIQUE KEY `sequential` (`sequential`), -- Ajout de la clé unique
     KEY `FK_currency_expense_invoice` (`currencyId`),
     KEY `FK_firm_expense_invoice` (`firmId`),
     KEY `FK_interlocutor_expense_invoice` (`interlocutorId`),
     KEY `FK_cabinet_expense_invoice` (`cabinetId`),
     KEY `FK_expense_invoice_meta_data` (`expenseInvoiceMetaDataId`),
     KEY `FK_expense_invoice_tax_withholding` (`taxWithholdingId`),
-    CONSTRAINT `FK_currency_expense_invoice` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_firm_expense_invoice` FOREIGN KEY (`firmId`) REFERENCES `firm` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_interlocutor_expense_invoice` FOREIGN KEY (`interlocutorId`) REFERENCES `interlocutor` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_cabinet_expense_invoice` FOREIGN KEY (`cabinetId`) REFERENCES `cabinet` (`id`) ON DELETE CASCADE,
+    KEY `FK_bank_account_expense_invoice` (`bankAccountId`),
     CONSTRAINT `FK_bank_account_expense_invoice` FOREIGN KEY (`bankAccountId`) REFERENCES `bank_account` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_cabinet_expense_invoice` FOREIGN KEY (`cabinetId`) REFERENCES `cabinet` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_currency_expense_invoice` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`id`) ON DELETE CASCADE,
     CONSTRAINT `FK_expense_invoice_meta_data` FOREIGN KEY (`expenseInvoiceMetaDataId`) REFERENCES `expense_invoice_meta_data` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_expense_invoice_tax_withholding` FOREIGN KEY (`taxWithholdingId`) REFERENCES `tax-withholding` (`id`) ON DELETE SET NULL
+    CONSTRAINT `FK_expense_invoice_tax_withholding` FOREIGN KEY (`taxWithholdingId`) REFERENCES `tax-withholding` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_firm_expense_invoice` FOREIGN KEY (`firmId`) REFERENCES `firm` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_interlocutor_expense_invoice` FOREIGN KEY (`interlocutorId`) REFERENCES `interlocutor` (`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS `article-expense-invoice-entry` (
