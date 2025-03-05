@@ -54,19 +54,23 @@ CREATE TABLE IF NOT EXISTS `article` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(50) DEFAULT NULL,
     `description` VARCHAR(255) DEFAULT NULL,
-    `quantityInStock` INT NOT NULL DEFAULT 0,
+    `quantityInStock` INT NOT NULL DEFAULT 0 COMMENT 'Quantité en stock',
     `qrCode` VARCHAR(255) DEFAULT NULL,
-    `sku` VARCHAR(50) NOT NULL,
-    `subCategory` VARCHAR(50) DEFAULT NULL,
-    `purchasePrice` DECIMAL(10,2) NOT NULL,
-    `salePrice` DECIMAL(10,2) NOT NULL,
-    `category` VARCHAR(50) NOT NULL,
+    `sku` VARCHAR(50) NOT NULL COMMENT 'Référence unique de l''article',
+    `subCategory` VARCHAR(50) DEFAULT NULL COMMENT 'Sous-catégorie de l''article',
+    `purchasePrice` DECIMAL(10,2) NOT NULL COMMENT 'Prix d''achat',
+    `salePrice` DECIMAL(10,2) NOT NULL COMMENT 'Prix de vente',
+    `category` VARCHAR(50) NOT NULL COMMENT 'Catégorie de l''article',
+    `barcode` VARCHAR(255) DEFAULT NULL,
     `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP NULL DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
-    PRIMARY KEY (`id`)
-);
+    `isDeletionRestricted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Restriction de suppression',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY (`sku`),
+    CONSTRAINT `fk_category` FOREIGN KEY (`category`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_subCategory` FOREIGN KEY (`subCategory`) REFERENCES `sub_categories` (`id`) ON DELETE SET NULL
+) ;
 
 
 CREATE TABLE
