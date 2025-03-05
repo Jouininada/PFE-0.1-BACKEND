@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `dueDate` datetime DEFAULT NULL,
     `object` varchar(255) DEFAULT NULL,
     `generalConditions` varchar(1024) DEFAULT NULL,
-    `status` varchar(255) DEFAULT NULL, -- Changé de ENUM à varchar(255)
+    `status` varchar(255) DEFAULT NULL,
     `discount` float DEFAULT NULL,
     `discount_type` enum('PERCENTAGE', 'AMOUNT') DEFAULT NULL,
     `subTotal` float DEFAULT NULL,
@@ -37,13 +37,13 @@ CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `amountPaid` float DEFAULT NULL,
     `taxWithholdingId` int DEFAULT NULL,
     `taxWithholdingAmount` float DEFAULT NULL,
-    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP, -- Changé de NOW() à CURRENT_TIMESTAMP
-    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP, -- Changé de NOW() à CURRENT_TIMESTAMP
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
     `deletedAt` timestamp NULL DEFAULT NULL,
-    `isDeletionRestricted` tinyint(1) DEFAULT '0', -- Changé de BOOLEAN à tinyint(1)
-    `sequentialNumbr` varchar(25) DEFAULT NULL, -- Ajouté
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
+    `sequentialNumbr` varchar(25) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `sequential` (`sequential`), -- Ajout de la clé unique
+    UNIQUE KEY `sequential` (`sequential`),
     KEY `FK_currency_expense_invoice` (`currencyId`),
     KEY `FK_firm_expense_invoice` (`firmId`),
     KEY `FK_interlocutor_expense_invoice` (`interlocutorId`),
