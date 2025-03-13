@@ -17,16 +17,41 @@ import * as Sentry from '@sentry/node';
 import { SentryFilter } from './filters/sentry.filter';
 import { MigrationService } from './common/database/services/database-migration.service';
 import { join } from 'path';
+import * as multer from 'multer'; // Import Multer
+import * as fs from 'fs'; // Import fs pour gérer les dossiers
 
 async function bootstrap() {
   const app: NestApplication = await NestFactory.create(AppModule);
   app.enableCors();
+
+  // Chemin absolu pour le dossier uploads
+  const uploadsPath = join(process.cwd(), 'uploads');
+
+  // Crée le dossier uploads s'il n'existe pas
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+
+  // Configure Multer to use disk storage
+  app.use(
+    multer({
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+          cb(null, uploadsPath); // Utilise le chemin absolu
+        },
+        filename: (req, file, cb) => {
+          cb(null, `${Date.now()}-${file.originalname}`); // Utilise un timestamp pour le nom du fichier
+        },
+      }),
+    }).single('file'), // Utilise 'file' comme nom de champ
+  );
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const logger = new Logger();
 
-  //Config Variables =====================================================
+  // Config Variables =====================================================
   const configService = app.get(ConfigService);
   // const env: string = configService.get<string>('app.env');
   const host: string = configService.get<string>('app.http.host');
@@ -39,8 +64,7 @@ async function bootstrap() {
 
   const sentryDSN: string = configService.get<string>('sentry.dsn');
 
-  //Swagger ==============================================================
-
+  // Swagger ==============================================================
   const documentBuild = new DocumentBuilder()
     .setTitle(docName)
     .setDescription(docDesc)
@@ -78,8 +102,7 @@ async function bootstrap() {
     customSiteTitle: docName,
   });
 
-  //Sentry ==============================================================
-
+  // Sentry ==============================================================
   // Initialize Sentry by passing the DNS included in the .env
   Sentry.init({
     dsn: sentryDSN,
@@ -88,7 +111,7 @@ async function bootstrap() {
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryFilter(httpAdapter));
 
-  //Migrations ==========================================================
+  // Migrations ==========================================================
   const migrationService = app.get(MigrationService);
   const migrationPath = join(__dirname, 'migrations');
   try {

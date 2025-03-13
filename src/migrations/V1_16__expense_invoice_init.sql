@@ -1,7 +1,19 @@
 -- Migration 1 : Création des tables de base
 
 -- Création de la table `expense_invoice_meta_data`
+-- Migration 1 : Création des tables de base
+
+-- Création de la table `expense_invoice_meta_data`
 CREATE TABLE IF NOT EXISTS `expense_invoice_meta_data` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `showInvoiceAddress` BOOLEAN DEFAULT TRUE,
+    `showDeliveryAddress` BOOLEAN DEFAULT TRUE,
+    `showArticleDescription` BOOLEAN DEFAULT TRUE,
+    `hasBankingDetails` BOOLEAN DEFAULT TRUE,
+    `hasGeneralConditions` BOOLEAN DEFAULT TRUE,
+    `taxSummary` JSON DEFAULT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `id` INT NOT NULL AUTO_INCREMENT,
     `showInvoiceAddress` BOOLEAN DEFAULT TRUE,
     `showDeliveryAddress` BOOLEAN DEFAULT TRUE,
@@ -13,10 +25,12 @@ CREATE TABLE IF NOT EXISTS `expense_invoice_meta_data` (
     `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
     `isDeletionRestricted` TINYINT(1) DEFAULT 0,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     `hasTaxWithholding` BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (`id`)
 );
 
+-- Création de la table `expense_invoice`
 -- Création de la table `expense_invoice`
 CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `id` INT NOT NULL AUTO_INCREMENT,
@@ -50,6 +64,7 @@ CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `pdfFileId` INT DEFAULT NULL,
     `uploadPdfField` INT DEFAULT NULL,
     PRIMARY KEY (`id`),
+    UNIQUE KEY `sequential` (`sequential`),
     UNIQUE KEY `sequential` (`sequential`),
     KEY `FK_currency_expense_invoice` (`currencyId`),
     KEY `FK_firm_expense_invoice` (`firmId`),
@@ -88,7 +103,12 @@ CREATE TABLE IF NOT EXISTS `article_expense_invoice_entry` (
     `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
     `isDeletionRestricted` TINYINT(1) DEFAULT 0,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     PRIMARY KEY (`id`),
+    KEY `FK_article_article_expense_invoice_entry` (`articleId`),
+    KEY `FK_expense_invoice_article_expense_invoice_entry` (`expenseInvoiceId`),
+    CONSTRAINT `FK_article_article_expense_invoice_entry` FOREIGN KEY (`articleId`) REFERENCES `article` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_expense_invoice_article_expense_invoice_entry` FOREIGN KEY (`expenseInvoiceId`) REFERENCES `expense_invoice` (`id`) ON DELETE SET NULL
     KEY `FK_article_article_expense_invoice_entry` (`articleId`),
     KEY `FK_expense_invoice_article_expense_invoice_entry` (`expenseInvoiceId`),
     CONSTRAINT `FK_article_article_expense_invoice_entry` FOREIGN KEY (`articleId`) REFERENCES `article` (`id`) ON DELETE SET NULL,
@@ -102,9 +122,21 @@ CREATE TABLE IF NOT EXISTS `article_expense_invoice_entry_tax` (
     `taxId` INT NOT NULL,
     `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+-- Création de la table `article_expense_invoice_entry_tax`
+CREATE TABLE IF NOT EXISTS `article_expense_invoice_entry_tax` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `articleExpenseInvoiceEntryId` INT NOT NULL,
+    `taxId` INT NOT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
     `isDeletionRestricted` TINYINT(1) DEFAULT 0,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     PRIMARY KEY (`id`),
+    KEY `FK_articleExpenseInvoiceEntry_article_expense_invoice_entry_tax` (`articleExpenseInvoiceEntryId`),
+    KEY `FK_tax_article_expense_invoice_entry_tax` (`taxId`),
+    CONSTRAINT `FK_articleExpenseInvoiceEntry_article_expense_invoice_entry_tax` FOREIGN KEY (`articleExpenseInvoiceEntryId`) REFERENCES `article_expense_invoice_entry` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_tax_article_expense_invoice_entry_tax` FOREIGN KEY (`taxId`) REFERENCES `tax` (`id`) ON DELETE CASCADE
     KEY `FK_articleExpenseInvoiceEntry_article_expense_invoice_entry_tax` (`articleExpenseInvoiceEntryId`),
     KEY `FK_tax_article_expense_invoice_entry_tax` (`taxId`),
     CONSTRAINT `FK_articleExpenseInvoiceEntry_article_expense_invoice_entry_tax` FOREIGN KEY (`articleExpenseInvoiceEntryId`) REFERENCES `article_expense_invoice_entry` (`id`) ON DELETE CASCADE,
@@ -112,13 +144,20 @@ CREATE TABLE IF NOT EXISTS `article_expense_invoice_entry_tax` (
 );
 
 -- Création de la table `expense_invoice_upload`
+-- Création de la table `expense_invoice_upload`
 CREATE TABLE IF NOT EXISTS `expense_invoice_upload` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `expenseInvoiceId` INT DEFAULT NULL,
     `uploadId` INT DEFAULT NULL,
     `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `expenseInvoiceId` INT DEFAULT NULL,
+    `uploadId` INT DEFAULT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     PRIMARY KEY (`id`),
     KEY `FK_expense_invoice_expense_invoice_upload` (`expenseInvoiceId`),

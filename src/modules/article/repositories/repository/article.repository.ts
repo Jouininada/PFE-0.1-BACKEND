@@ -15,4 +15,6 @@ export class ArticleRepository extends DatabaseAbstractRepository<ArticleEntity>
   ) {
     super(articleRepository, txHost);
   }
+
+  
 }

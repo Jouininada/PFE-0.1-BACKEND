@@ -50,17 +50,41 @@ CREATE TABLE
         CONSTRAINT `FK_countryId` FOREIGN KEY (`countryId`) REFERENCES `country` (`id`) ON DELETE SET NULL
     );
 
-CREATE TABLE
-    IF NOT EXISTS `article` (
-        `id` int NOT NULL AUTO_INCREMENT,
-        `title` varchar(50) DEFAULT NULL,
-        `description` varchar(255) DEFAULT NULL,
-        `createdAt` TIMESTAMP DEFAULT NOW(),
-        `updatedAt` TIMESTAMP DEFAULT NOW(),
-        `deletedAt` TIMESTAMP DEFAULT NULL,
-        `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
-        PRIMARY KEY (`id`)
-    );
+CREATE TABLE IF NOT EXISTS `article` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(50) DEFAULT NULL,
+    `description` VARCHAR(255) DEFAULT NULL,
+    `quantityInStock` INT NOT NULL DEFAULT 0 COMMENT 'Quantité en stock',
+    `qrCode` VARCHAR(5000) DEFAULT NULL,
+    `sku` VARCHAR(50) NOT NULL COMMENT 'Référence unique de l''article',
+    `subCategory` VARCHAR(50) DEFAULT NULL COMMENT 'Sous-catégorie de l''article',
+    `purchasePrice` DECIMAL(10,2) NOT NULL COMMENT 'Prix d''achat',
+    `salePrice` DECIMAL(10,2) NOT NULL COMMENT 'Prix de vente',
+    `category` VARCHAR(50) NOT NULL COMMENT 'Catégorie de l''article',
+    `barcode` VARCHAR(5000) DEFAULT NULL,
+    `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    `deletedAt` DATETIME(6) DEFAULT NULL,
+    `isDeletionRestricted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Restriction de suppression',
+    `status` VARCHAR(50) NOT NULL DEFAULT 'draft',
+    `version` INT NOT NULL DEFAULT '1',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY (`sku`),
+    CONSTRAINT `fk_category` FOREIGN KEY (`category`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_subCategory` FOREIGN KEY (`subCategory`) REFERENCES `sub_categories` (`id`) ON DELETE SET NULL
+) ;
+
+CREATE TABLE IF NOT EXISTS `article_history` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `version` INT NOT NULL,
+  `changes` JSON NOT NULL,
+  `date` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  `articleId` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_article_history_article` (`articleId`),
+  CONSTRAINT `fk_article` FOREIGN KEY (`articleId`) REFERENCES `article` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_article_history_article` FOREIGN KEY (`articleId`) REFERENCES `article` (`id`) ON DELETE CASCADE
+);
 
 CREATE TABLE
     IF NOT EXISTS `currency` (

@@ -16,6 +16,8 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JwtModule } from '@nestjs/jwt';
+import { MulterModule } from '@nestjs/platform-express';
+import * as path from 'path';
 
 @Module({
   controllers: [HelloController],
@@ -36,6 +38,12 @@ import { JwtModule } from '@nestjs/jwt';
       imports: [TranslationModule],
       useClass: TranslationConfigService,
       resolvers: [new HeaderResolver(['x-custom-lang'])],
+    }),
+    MulterModule.register({
+      dest: path.join(__dirname, '..', process.env.UPLOAD_PATH || 'uploads'),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB max
+      },
     }),
     CommonModule,
     TranslationModule,
