@@ -1,4 +1,5 @@
 -- Table expense_payment
+-- Table expense_payment
 CREATE TABLE IF NOT EXISTS `expense_payment` (
     `id` int NOT NULL AUTO_INCREMENT,
     `amount` float DEFAULT NULL,
@@ -12,18 +13,21 @@ CREATE TABLE IF NOT EXISTS `expense_payment` (
         'payment.payment_mode.bank_transfer',
         'payment.payment_mode.wire_transfer'
     ) DEFAULT NULL,
-    `currencyId` int NOT NULL,
-    `firmId` int NOT NULL,
+    `currencyId` int DEFAULT NULL,
+    `firmId` int DEFAULT NULL,
     `notes` varchar(1024) DEFAULT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
-    `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
+    `pdfFileId` int DEFAULT NULL,
+    `sequentialNumbr` varchar(25) DEFAULT NULL,
+    `sequential` varchar(25) DEFAULT NULL, -- Nouvelle colonne ajoutée
     PRIMARY KEY (`id`),
     KEY `FK_firm_expense_payment` (`firmId`),
     KEY `FK_currency_expense_payment` (`currencyId`),
-    CONSTRAINT `FK_firm_expense_payment` FOREIGN KEY (`firmId`) REFERENCES `firm` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_currency_expense_payment` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`id`) ON DELETE CASCADE
+    CONSTRAINT `FK_expense_payment_currency` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_expense_payment_firm` FOREIGN KEY (`firmId`) REFERENCES `firm` (`id`) ON DELETE CASCADE
 );
 
 -- Table expense_payment_upload
@@ -31,10 +35,10 @@ CREATE TABLE IF NOT EXISTS `expense_payment_upload` (
     `id` int NOT NULL AUTO_INCREMENT,
     `expensePaymentId` int DEFAULT NULL,
     `uploadId` int DEFAULT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
-    `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `FK_expense_payment_expense_payment_upload` (`expensePaymentId`),
     KEY `FK_upload_expense_payment_upload` (`uploadId`),
@@ -48,10 +52,10 @@ CREATE TABLE IF NOT EXISTS `expense_payment_invoice_entry` (
     `expensePaymentId` int DEFAULT NULL,
     `expenseInvoiceId` int DEFAULT NULL,
     `amount` float DEFAULT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
-    `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `FK_expense_payment_expense_payment_invoice_entry` (`expensePaymentId`),
     KEY `FK_expense_invoice_expense_payment_invoice_entry` (`expenseInvoiceId`),
@@ -63,7 +67,8 @@ CREATE TABLE IF NOT EXISTS `expense_payment_invoice_entry` (
 ALTER TABLE `expense_invoice`
 ADD COLUMN `amountPaid` float DEFAULT 0;
 
-ALTER TABLE `expense_invoice` MODIFY `status` ENUM (
+ALTER TABLE `expense_invoice`
+MODIFY COLUMN `status` ENUM (
     'invoice.status.non_existent',
     'invoice.status.draft',
     'invoice.status.sent',

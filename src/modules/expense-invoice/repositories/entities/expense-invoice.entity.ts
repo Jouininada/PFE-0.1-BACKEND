@@ -22,6 +22,7 @@ import { TaxWithholdingEntity } from 'src/modules/tax-withholding/repositories/e
 import { EXPENSE_INVOICE_STATUS } from '../../enums/expense-invoice-status.enum';
 import { ExpensQuotationEntity } from 'src/modules/expense_quotation/repositories/entities/expensquotation.entity';
 import { ExpensePaymentInvoiceEntryEntity } from 'src/modules/expense-payment/repositories/entities/expense-payment-invoice-entry.entity';
+import { UploadEntity } from 'src/common/storage/repositories/entities/upload.entity';
 
 @Entity('expense_invoice')
 export class ExpenseInvoiceEntity extends EntityHelper {
@@ -140,5 +141,13 @@ quotation: ExpensQuotationEntity;
   
   @Column({ type: 'varchar', length: 25, nullable: true })
 sequentialNumbr: string;
+
+//ajout au migration!
+@OneToOne(() => UploadEntity, { nullable: true })
+@JoinColumn({ name: 'pdfFileId' })
+uploadPdfField: UploadEntity;
+
+@Column({ type: 'int', nullable: true })
+pdfFileId: number;
 }
 

@@ -28,6 +28,7 @@ import { LogEvent } from 'src/common/logger/decorators/log-event.decorator';
 import { EVENT_TYPE } from 'src/app/enums/logger/event-types.enum';
 import { UpdateExpensQuotationDto } from '../dtos/expensquotation.update.dto';
 import { DuplicateExpensQuotationDto } from '../dtos/expensquotation.duplicate.dto';
+import { ExpensQuotationEntity } from '../repositories/entities/expensquotation.entity';
 
 
 @ApiTags('expensquotation')
@@ -127,5 +128,19 @@ async findAll(
     req.logInfo = { action: 'update', id };  // Adding action to provide more context in logs
     return this.expensQuotationService.update(id, updateQuotationDto);
   }
+  // Dans votre contrôleur backend (expense-quotation.controller.ts)
+@Delete(':id/pdf')
+async deletePdfFile(@Param('id') id: number): Promise<void> {
+  await this.expensQuotationService.deletePdfFile(id);
+}
+
+@Put(':id/update-status-if-expired') // Définissez la route
+  async updateQuotationStatusIfExpired(
+    @Param('id') quotationId: number, // Récupérez l'ID depuis l'URL
+  ): Promise<ExpensQuotationEntity> {
+    return this.expensQuotationService.updateQuotationStatusIfExpired(quotationId); // Appelez la méthode du service
+  }
+
+
  
 }

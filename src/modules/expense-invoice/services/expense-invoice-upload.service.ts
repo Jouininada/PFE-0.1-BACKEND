@@ -70,12 +70,10 @@ export class ExpenseInvoiceUploadService {
   async save(
     invoiceId: number,
     uploadId: number,
-    filePath: number, // Ajout du paramètre filePath
   ): Promise<ExpenseInvoiceUploadEntity> {
     return this.invoiceUploadRepository.save({
       expenseInvoice: { id: invoiceId },
-      uploadId,
-      filePath, // Assurez-vous d'ajouter le filePath ici
+      uploadId, // Assurez-vous d'ajouter le filePath ici
     });
   }
   
@@ -89,7 +87,6 @@ export class ExpenseInvoiceUploadService {
     const duplicatedInvoiceUploadEntity = await this.invoiceUploadRepository.save({
       expenseInvoice: { id: invoiceId },
       uploadId: duplicatedUpload.id,
-      filePath: originalInvoiceUpload.filePath, // Copie du filePath de l'original
     });
   
     return duplicatedInvoiceUploadEntity;
@@ -127,6 +124,11 @@ export class ExpenseInvoiceUploadService {
 
   async getTotal(): Promise<number> {
     return this.invoiceUploadRepository.getTotalCount();
+  }
+  async findByInvoiceId(invoiceId: number): Promise<ExpenseInvoiceUploadEntity[]> {
+    return this.invoiceUploadRepository.findAll({
+      where: { expenseInvoice: { id: invoiceId } },
+    });
   }
 }
 

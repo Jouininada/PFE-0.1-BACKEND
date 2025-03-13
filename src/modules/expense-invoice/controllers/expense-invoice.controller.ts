@@ -125,5 +125,26 @@ import { ExpenseInvoiceService } from '../services/expense-invoice.service';
       req.logInfo = { id };
       return this.invoiceService.softDelete(id);
     }
+
+    @Delete(':id/pdf')
+    async deletePdfFile(@Param('id') id: number): Promise<void> {
+      await this.invoiceService.deletePdfFile(id);
+    }
+    @ApiParam({
+      name: 'id',
+      type: 'number',
+      required: true,
+    }) 
+    @Put('/:id/update-status-if-expired')
+    @LogEvent(EVENT_TYPE.BUYING_INVOICE_UPDATED)
+    async updateInvoiceStatusIfExpired(
+      @Param('id') id: number,
+      @Request() req: ExpressRequest,
+    ): Promise<ExpenseResponseInvoiceDto> {
+      req.logInfo = { id };
+      return this.invoiceService.updateInvoiceStatusIfExpired(id);
+    }
+
   }
-  
+
+ 

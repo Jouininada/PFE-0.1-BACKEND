@@ -11,6 +11,7 @@ import { ArticleExpensQuotationEntryEntity } from './article-expensquotation-ent
 import { BankAccountEntity } from 'src/modules/bank-account/repositories/entities/bank-account.entity';
 import { ExpensQuotationUploadEntity } from './expensquotation-file.entity';
 import { ExpenseInvoiceEntity } from 'src/modules/expense-invoice/repositories/entities/expense-invoice.entity';
+import { UploadEntity } from 'src/common/storage/repositories/entities/upload.entity';
 
 @Entity('expense_quotation')
 export class ExpensQuotationEntity extends EntityHelper {
@@ -112,4 +113,11 @@ expensearticleQuotationEntries: ArticleExpensQuotationEntryEntity[];
 
   @Column({ type: 'varchar', length: 25, nullable: true })
   sequentialNumbr: string;
+
+  @OneToOne(() => UploadEntity, { nullable: true })
+  @JoinColumn({ name: 'pdfFileId' })
+  uploadPdfField: UploadEntity;
+  
+  @Column({ type: 'int', nullable: true })
+  pdfFileId: number;
 }

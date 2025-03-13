@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PAYMENT_MODE } from '../enums/expense-payment-mode.enum';
 import { ResponseExpensePaymentUploadDto } from './expense-payment-upload.response.dto';
 import { ResponseExpensePaymentInvoiceEntryDto } from './expense-payment-invoice-entry.response.dto';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 
 export class ResponseExpensePaymentDto {
@@ -53,4 +54,10 @@ export class ResponseExpensePaymentDto {
 
   @ApiProperty({ required: false })
   invoices?: ResponseExpensePaymentInvoiceEntryDto[];
+
+   @IsOptional()
+          @IsString()
+          @MaxLength(25)
+          sequentialNumbr?: string;
+  pdfFileId: any;
 }
