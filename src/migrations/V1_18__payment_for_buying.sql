@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS `expense_payment_invoice_entry` (
 ALTER TABLE `expense_invoice`
 ADD COLUMN `amountPaid` float DEFAULT 0;
 
-ALTER TABLE `expense_invoice` MODIFY `status` ENUM (
+ALTER TABLE `expense_invoice`
+MODIFY COLUMN `status` ENUM (
     'invoice.status.non_existent',
     'invoice.status.draft',
     'invoice.status.sent',

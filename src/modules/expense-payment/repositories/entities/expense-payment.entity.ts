@@ -6,12 +6,14 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { CurrencyEntity } from 'src/modules/currency/repositories/entities/currency.entity';
 import { FirmEntity } from 'src/modules/firm/repositories/entities/firm.entity';
 import { ExpensePaymentUploadEntity } from './expense-payment-file.entity';
 import { ExpensePaymentInvoiceEntryEntity } from './expense-payment-invoice-entry.entity';
 import { PAYMENT_MODE } from '../../enums/expense-payment-mode.enum';
+import { UploadEntity } from 'src/common/storage/repositories/entities/upload.entity';
 
 @Entity('expense_payment')
 export class ExpensePaymentEntity extends EntityHelper {
@@ -55,4 +57,17 @@ export class ExpensePaymentEntity extends EntityHelper {
 
   @Column({ type: 'int', nullable: true })
   firmId: number;
+
+  @OneToOne(() => UploadEntity, { nullable: true })
+  @JoinColumn({ name: 'pdfFileId' })
+  uploadPdfField: UploadEntity;
+  
+  @Column({ type: 'int', nullable: true })
+  pdfFileId: number;
+
+  @Column({ type: 'varchar', length: 25, unique: true,nullable:true})
+  sequential: string;
+
+  @Column({ type: 'varchar', length: 25, nullable: true })
+  sequentialNumbr: string;
 }

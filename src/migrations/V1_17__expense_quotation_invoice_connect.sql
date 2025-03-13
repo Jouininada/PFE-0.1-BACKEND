@@ -1,3 +1,9 @@
+-- Migration 2 : Modifications et ajouts de colonnes
+
+-- Ajout de la colonne 'hasTaxStamp' dans la table 'expense_invoice_meta_data'
+ALTER TABLE `expense_invoice_meta_data`
+ADD COLUMN `hasTaxStamp` BOOLEAN DEFAULT FALSE;
+
 -- Modification de la colonne 'status' dans la table 'expense_quotation'
 ALTER TABLE `expense_quotation`
 MODIFY `status` ENUM(
@@ -14,14 +20,10 @@ MODIFY `status` ENUM(
 
 -- Ajout de la colonne 'quotationId' et contrainte de clé étrangère dans la table 'expense_invoice'
 ALTER TABLE `expense_invoice`
-ADD COLUMN `quotationId` INT NULL,
+ADD COLUMN `quotationId` INT DEFAULT NULL,
 ADD CONSTRAINT `FK_expense_invoice_expense_quotation` FOREIGN KEY (`quotationId`) REFERENCES `expense_quotation` (`id`) ON DELETE SET NULL;
 
 -- Ajout de la colonne 'taxStampId' et contrainte de clé étrangère dans la table 'expense_invoice'
 ALTER TABLE `expense_invoice`
-ADD COLUMN `taxStampId` INT NULL,
+ADD COLUMN `taxStampId` INT DEFAULT NULL,
 ADD CONSTRAINT `FK_expense_invoice_tax` FOREIGN KEY (`taxStampId`) REFERENCES `tax` (`id`) ON DELETE SET NULL;
-
--- Ajout de la colonne 'hasTaxStamp' dans la table 'expense_invoice_meta_data'
-ALTER TABLE `expense_invoice_meta_data`
-ADD COLUMN `hasTaxStamp` BOOLEAN DEFAULT FALSE;

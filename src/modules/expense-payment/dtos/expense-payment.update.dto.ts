@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateExpensePaymentUploadDto } from './expense-payment-upload.create.dto';
-import { IsOptional } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 import { UpdateExpensePaymentUploadDto } from './expense-payment-upload.update.dto';
 import { UpdateExpensePaymentInvoiceEntryDto } from './expense-payment-invoice-entry.update.dto';
 
@@ -16,4 +16,10 @@ export class UpdateExpensePaymentDto extends CreateExpensePaymentUploadDto {
   @ApiProperty({ required: false })
   @IsOptional()
   invoices?: UpdateExpensePaymentInvoiceEntryDto[];
+
+  @IsOptional()
+        @IsString()
+        @MaxLength(25)
+        sequentialNumbr?: string;
+  pdfFileId: any;
 }

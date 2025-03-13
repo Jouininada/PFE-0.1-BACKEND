@@ -1,0 +1,22 @@
+[33m5b42ab9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: commit: ModuleAchatVrsion1
+[33m3f51be8[m HEAD@{1}: commit: ModuleAchatAvantChatBot
+[33m0aa54b3[m HEAD@{2}: commit: ExpenseInvoiceMigration
+[33m2f52087[m HEAD@{3}: pull origin main: Fast-forward
+[33m8e32f21[m HEAD@{4}: commit: PartieAchat
+[33ma90d0e1[m HEAD@{5}: pull origin main: Fast-forward
+[33mc64915f[m HEAD@{6}: reset: moving to c64915f
+[33ma90d0e1[m HEAD@{7}: pull origin main: Merge made by the 'ort' strategy.
+[33m20a0955[m HEAD@{8}: commit (merge): ExpenseInvoiceQuotationPayment
+[33mc64915f[m HEAD@{9}: commit: squence
+[33mbcf5c64[m HEAD@{10}: reset: moving to bcf5c64
+[33mb6f6f55[m HEAD@{11}: reset: moving to HEAD
+[33mb6f6f55[m HEAD@{12}: reset: moving to HEAD
+[33mb6f6f55[m HEAD@{13}: reset: moving to HEAD
+[33mb6f6f55[m HEAD@{14}: reset: moving to HEAD
+[33mb6f6f55[m HEAD@{15}: reset: moving to HEAD
+[33mb6f6f55[m HEAD@{16}: pull origin main: Fast-forward
+[33m99563d4[m HEAD@{17}: reset: moving to 99563d4
+[33mc8a5d2d[m HEAD@{18}: pull origin main: Merge made by the 'ort' strategy.
+[33mbcf5c64[m HEAD@{19}: commit: InvoiceSequence
+[33m1170b6c[m HEAD@{20}: commit: BackendDernierVersion
+[33m99563d4[m HEAD@{21}: clone: from https://github.com/Jouininada/PFE-0.1-BACKEND.git

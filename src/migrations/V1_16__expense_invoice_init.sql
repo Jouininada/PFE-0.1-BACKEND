@@ -1,20 +1,23 @@
+-- Migration 1 : Création des tables de base
+
+-- Création de la table `expense_invoice_meta_data`
 CREATE TABLE IF NOT EXISTS `expense_invoice_meta_data` (
-    `id` int NOT NULL AUTO_INCREMENT,
-    `showInvoiceAddress` boolean DEFAULT TRUE,
-    `showDeliveryAddress` boolean DEFAULT TRUE,
-    `showArticleDescription` boolean DEFAULT TRUE,
-    `hasBankingDetails` boolean DEFAULT TRUE,
-    `hasGeneralConditions` boolean DEFAULT TRUE,
-    `taxSummary` json DEFAULT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `showInvoiceAddress` BOOLEAN DEFAULT TRUE,
+    `showDeliveryAddress` BOOLEAN DEFAULT TRUE,
+    `showArticleDescription` BOOLEAN DEFAULT TRUE,
+    `hasBankingDetails` BOOLEAN DEFAULT TRUE,
+    `hasGeneralConditions` BOOLEAN DEFAULT TRUE,
+    `taxSummary` JSON DEFAULT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     `hasTaxWithholding` BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (`id`)
 );
 
-
+-- Création de la table `expense_invoice`
 CREATE TABLE IF NOT EXISTS `expense_invoice` (
     `id` int NOT NULL AUTO_INCREMENT,
     `sequential` varchar(25) DEFAULT NULL,
@@ -73,37 +76,39 @@ CREATE TABLE IF NOT EXISTS `article-expense-invoice-entry` (
     `createdAt` TIMESTAMP DEFAULT NOW(),
     `updatedAt` TIMESTAMP DEFAULT NOW(),
     `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     PRIMARY KEY (`id`),
-    KEY `FK_article_article-expense-invoice-entry` (`articleId`),
-    KEY `FK_expense_invoice_article-expense-invoice-entry` (`expenseInvoiceId`),
-    CONSTRAINT `FK_article_article-expense-invoice-entry` FOREIGN KEY (`articleId`) REFERENCES `article` (`id`) ON DELETE SET NULL,
-    CONSTRAINT `FK_expense_invoice_article-expense-invoice-entry` FOREIGN KEY (`expenseInvoiceId`) REFERENCES `expense_invoice` (`id`) ON DELETE SET NULL
+    KEY `FK_article_article_expense_invoice_entry` (`articleId`),
+    KEY `FK_expense_invoice_article_expense_invoice_entry` (`expenseInvoiceId`),
+    CONSTRAINT `FK_article_article_expense_invoice_entry` FOREIGN KEY (`articleId`) REFERENCES `article` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `FK_expense_invoice_article_expense_invoice_entry` FOREIGN KEY (`expenseInvoiceId`) REFERENCES `expense_invoice` (`id`) ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS `article-expense-invoice-entry-tax` (
-    `id` int NOT NULL AUTO_INCREMENT,
-    `articleExpenseInvoiceEntryId` int NOT NULL,
-    `taxId` int NOT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
+-- Création de la table `article_expense_invoice_entry_tax`
+CREATE TABLE IF NOT EXISTS `article_expense_invoice_entry_tax` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `articleExpenseInvoiceEntryId` INT NOT NULL,
+    `taxId` INT NOT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     PRIMARY KEY (`id`),
-    KEY `FK_articleExpenseInvoiceEntry_article-expense-invoice-entry-tax` (`articleExpenseInvoiceEntryId`),
-    KEY `FK_tax_article-expense-invoice-entry-tax` (`taxId`),
-    CONSTRAINT `FK_articleExpenseInvoiceEntry_article-expense-invoice-entry-tax` FOREIGN KEY (`articleExpenseInvoiceEntryId`) REFERENCES `article-expense-invoice-entry` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_tax_article-expense-invoice-entry-tax` FOREIGN KEY (`taxId`) REFERENCES `tax` (`id`) ON DELETE CASCADE
+    KEY `FK_articleExpenseInvoiceEntry_article_expense_invoice_entry_tax` (`articleExpenseInvoiceEntryId`),
+    KEY `FK_tax_article_expense_invoice_entry_tax` (`taxId`),
+    CONSTRAINT `FK_articleExpenseInvoiceEntry_article_expense_invoice_entry_tax` FOREIGN KEY (`articleExpenseInvoiceEntryId`) REFERENCES `article_expense_invoice_entry` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_tax_article_expense_invoice_entry_tax` FOREIGN KEY (`taxId`) REFERENCES `tax` (`id`) ON DELETE CASCADE
 );
 
+-- Création de la table `expense_invoice_upload`
 CREATE TABLE IF NOT EXISTS `expense_invoice_upload` (
-    `id` int NOT NULL AUTO_INCREMENT,
-    `expenseInvoiceId` int DEFAULT NULL,
-    `uploadId` int DEFAULT NULL,
-    `createdAt` TIMESTAMP DEFAULT NOW(),
-    `updatedAt` TIMESTAMP DEFAULT NOW(),
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `expenseInvoiceId` INT DEFAULT NULL,
+    `uploadId` INT DEFAULT NULL,
+    `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deletedAt` TIMESTAMP DEFAULT NULL,
-    `isDeletionRestricted` BOOLEAN DEFAULT FALSE,
+    `isDeletionRestricted` TINYINT(1) DEFAULT 0,
     PRIMARY KEY (`id`),
     KEY `FK_expense_invoice_expense_invoice_upload` (`expenseInvoiceId`),
     KEY `FK_upload_expense_invoice_upload` (`uploadId`),

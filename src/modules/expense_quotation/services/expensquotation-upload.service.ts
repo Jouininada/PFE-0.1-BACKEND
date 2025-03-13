@@ -78,9 +78,8 @@ export class ExpensQuotationUploadService {
   async save(
     expensequotationId: number,
     uploadId: number,
-    pdfFileId:number
   ): Promise<ExpensQuotationUploadEntity> {
-    return this.quotationUploadRepository.save({ expensequotationId, uploadId,pdfFileId });
+    return this.quotationUploadRepository.save({ expensequotationId, uploadId });
   }
 
 
@@ -104,7 +103,6 @@ export class ExpensQuotationUploadService {
       {
         expensequotationId: quotationId,
         uploadId: duplicatedUpload.id,
-        pdfFileId:duplicatedUpload.id
       },
     );
 
@@ -114,7 +112,6 @@ export class ExpensQuotationUploadService {
   async softDelete(id: number): Promise<ExpensQuotationUploadEntity> {
     const upload = await this.findOneById(id);
     this.storageService.delete(upload.uploadId);
-    this.storageService.delete(upload.pdfFileId);
     this.quotationUploadRepository.softDelete(upload.id);
     return upload;
   }

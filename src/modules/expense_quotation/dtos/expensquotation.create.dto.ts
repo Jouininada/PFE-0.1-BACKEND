@@ -120,6 +120,12 @@ export class CreateExpensQuotationDto {
   @MaxLength(25)
   sequentialNumbr?: string;
 
+  @ApiProperty({
+    example: 1,
+    type: Number,
+  })
+  pdfFileId?: number;
+
  
 
 }

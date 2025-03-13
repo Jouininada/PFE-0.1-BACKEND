@@ -71,4 +71,17 @@ export class ExpenseCreatePaymentDto {
   @ApiProperty({ required: false })
   @IsOptional()
   invoices?: ExpenseCreatePaymentInvoiceEntryDto[];
+ 
+  @ApiProperty({
+    example: 1,
+    type: Number,
+  })
+  pdfFileId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(25)
+  sequentialNumbr?: string;
+
+
 }
