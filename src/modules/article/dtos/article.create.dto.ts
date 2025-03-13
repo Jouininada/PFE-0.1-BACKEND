@@ -11,11 +11,6 @@ export class CreateArticleDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ example: '1234567890', type: String })
-  @IsString()
-  @IsNotEmpty()
-  sku: string;
-
   @ApiProperty({ example: 'Électronique', type: String })
   @IsString()
   @IsNotEmpty()
@@ -40,5 +35,10 @@ export class CreateArticleDto {
   @ApiProperty({ example: '123456789012', type: String })
   @IsString()
   @IsNotEmpty()
-  barcode: string; // Code-barres
+  barcode: string;
+
+  @ApiProperty({ example: 'draft', type: String })
+  @IsString()
+  @IsNotEmpty()
+  status: string; // Nouveau champ pour le statut
 }

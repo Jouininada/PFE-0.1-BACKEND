@@ -124,9 +124,10 @@ quotation: ExpensQuotationEntity;
   @Column({ type: 'int' })
   taxStampId: number;
 
-  //expensepayment no payment:attention
+
+
   @OneToMany(() => ExpensePaymentInvoiceEntryEntity, (entry) => entry.expenseInvoice)
-  payments: ExpensePaymentInvoiceEntryEntity[];
+payments: ExpensePaymentInvoiceEntryEntity[];
 
   @ManyToOne(() => TaxWithholdingEntity)
   @JoinColumn({ name: 'taxWithholdingId' })

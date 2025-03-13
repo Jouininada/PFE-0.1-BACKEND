@@ -50,6 +50,8 @@ export class ExpenseArticleInvoiceEntryEntity extends EntityHelper {
 @Column({ type: 'int', nullable: true })
 expenseInvoiceId: number;
 
+@Column({ type: 'float', nullable: true })
+amount: number;
 
 
   @OneToMany(

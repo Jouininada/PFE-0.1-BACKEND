@@ -31,10 +31,14 @@ export class PdfService {
     const imageBase64 = await this.imageToBase64(imagePath);
 
     const html = ejs.render(template, { ...data, logo: imageBase64 });
+
+    // Configurer Puppeteer pour utiliser Chrome localement
     const browser = await puppeteer.launch({
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Chemin de Chrome
       ignoreDefaultArgs: ['--disable-extensions'],
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
+
     const page = await browser.newPage();
     await page.setContent(html);
     const stylesheets = await this.getStylesheets(html);

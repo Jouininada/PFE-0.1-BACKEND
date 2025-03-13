@@ -10,6 +10,8 @@ import { ActivityModule } from 'src/modules/activity/activity.module';
 import { ActivityController } from 'src/modules/activity/controllers/activity.controller';
 import { AddressModule } from 'src/modules/address/address.module';
 import { AddressController } from 'src/modules/address/controllers/address.controller';
+import { ArticleHistoryModule } from 'src/modules/article-history/article-history.module';
+import { ArticleHistoryController } from 'src/modules/article-history/controllers/article-history.controller';
 import { ArticleModule } from 'src/modules/article/article.module';
 import { ArticleController } from 'src/modules/article/controllers/article.controller';
 import { BankAccountModule } from 'src/modules/bank-account/bank-account.module';
@@ -83,7 +85,9 @@ import { UsersModule } from 'src/modules/user/user.module';
     ExpensQuotationController,
     ExpenseInvoiceController,
     ExpensePaymentController,
-    ExpensePaymentConditionController
+    ExpensePaymentConditionController,
+    ArticleHistoryController
+
 
 
   ],
@@ -117,7 +121,8 @@ import { UsersModule } from 'src/modules/user/user.module';
     ExpenseQuotationModule,
     ExpenseInvoiceModule,
     ExpensePaymentModule,
-    ExpensePaymentConditionModule
+    ExpensePaymentConditionModule,
+    ArticleHistoryModule
 
 
 

@@ -10,10 +10,11 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  NotFoundException,
+  Res,
 } from '@nestjs/common';
-import { ApiTags, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiParam, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { PageDto } from 'src/common/database/dtos/database.page.dto';
-import { ApiPaginatedResponse } from 'src/common/database/decorators/ApiPaginatedResponse';
 import { ArticleService } from '../services/article.service';
 import { ResponseArticleDto } from '../dtos/article.response.dto';
 import { CreateArticleDto } from '../dtos/article.create.dto';
@@ -23,6 +24,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import { QrCodeService } from '../services/codeQr.service';
 import { BarcodeService } from '../services/BarcodeService';
+import { ArticleHistoryService } from 'src/modules/article-history/services/article-history.service';
+import { ResponseArticleHistoryDto } from 'src/modules/article-history/dtos/responseArticleHistoryDto';
+import { Response } from 'express'; 
 
 @ApiTags('article')
 @Controller({
@@ -30,9 +34,13 @@ import { BarcodeService } from '../services/BarcodeService';
   path: '/article',
 })
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService,
+  constructor(
+    private readonly articleService: ArticleService,
     private readonly qrCodeService: QrCodeService,
-    private readonly barCodeService: BarcodeService) {}
+    private readonly barCodeService: BarcodeService,
+    private readonly articleHistoryService: ArticleHistoryService,
+
+  ) {}
 
   @Post('/save-with-filter-title')
   async saveWithFilterTitle(
@@ -48,7 +56,22 @@ export class ArticleController {
   }
 
   @Get('/all')
-  async findAll(@Query() options: IQueryObject): Promise<ResponseArticleDto[]> {
+  @ApiResponse({
+    status: 200,
+    description: 'Retourne le nombre total d\'articles',
+    schema: {
+      type: 'object',
+      properties: {
+        total: {
+          type: 'number',
+          example: 104,
+        },
+      },
+    },
+  })
+  async findAll(
+    @Query() options: IQueryObject,
+  ): Promise<{ total: number }> {
     return await this.articleService.findAll(options);
   }
 
@@ -66,13 +89,24 @@ export class ArticleController {
     required: true,
   })
   async findOneById(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Query() query: IQueryObject,
   ): Promise<ResponseArticleDto> {
-    query.filter
-      ? (query.filter += `,id||$eq||${id}`)
-      : (query.filter = `id||$eq||${id}`);
-    return await this.articleService.findOneByCondition(query);
+    try {
+      const parsedId = parseInt(id, 10);
+      if (isNaN(parsedId)) {
+        throw new BadRequestException('ID doit être un nombre valide.');
+      }
+
+      query.filter
+        ? (query.filter += `,id||$eq||${parsedId}`)
+        : (query.filter = `id||$eq||${parsedId}`);
+
+      return await this.articleService.findOneByCondition(query);
+    } catch (error) {
+      console.error('Erreur dans findOneById:', error);
+      throw new BadRequestException('Erreur lors de la récupération de l\'article. Détails : ' + error.message);
+    }
   }
 
   @Post('/save')
@@ -81,20 +115,54 @@ export class ArticleController {
   ): Promise<ResponseArticleDto> {
     return await this.articleService.save(createArticleDto);
   }
-
-  @Put('/:id')
+  
+  @Put('/update/:id')
   @ApiParam({
     name: 'id',
     type: 'number',
     required: true,
   })
+
+  
   async update(
     @Param('id') id: number,
     @Body() updateArticleDto: UpdateArticleDto,
-  ): Promise<ResponseArticleDto> {
-    return await this.articleService.update(id, updateArticleDto);
+  ): Promise<ResponseArticleDto | { message: string }> {
+    try {
+      const updatedArticle = await this.articleService.update(id, updateArticleDto);
+      return updatedArticle;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return { message: 'Article non trouvé.' };
+      }
+      throw error;
+    }
   }
 
+  @Get('/article-details/:id')
+  @ApiParam({
+    name: 'id',
+    type: 'number',
+    required: true,
+  })
+  async getArticleDetails(@Param('id') id: number): Promise<ResponseArticleDto> {
+    try {
+      if (isNaN(id)) {
+        throw new BadRequestException('ID doit être un nombre valide.');
+      }
+
+      const article = await this.articleService.getArticleDetails(id);
+
+      if (!article) {
+        throw new NotFoundException('Aucun article trouvé avec cet ID.');
+      }
+
+      return article;
+    } catch (error) {
+      console.error('Erreur dans getArticleDetails:', error);
+      throw new BadRequestException('Erreur lors de la récupération des détails de l\'article.');
+    }
+  }
   @Delete('/delete/:id')
   @ApiParam({
     name: 'id',
@@ -106,8 +174,13 @@ export class ArticleController {
   }
 
   @Post('/generate-qr')
-  async generateQrCode(@Body('data') data: string) {
-    return this.qrCodeService.generateQrCode(data);
+  async generateQrCode(@Body('data') data: string): Promise<{ qrCode: string }> {
+    try {
+      const qrCode = await this.qrCodeService.generateQrCode(data);
+      return { qrCode };
+    } catch (error) {
+      throw new BadRequestException('Erreur lors de la génération du code QR.');
+    }
   }
 
   @Get('/qr/:id')
@@ -127,12 +200,19 @@ export class ArticleController {
   @Post('/search-by-qr')
   async searchByQrCode(@Body('qrCode') qrCode: string): Promise<ResponseArticleDto | { message: string }> {
     try {
-      const article = await this.articleService.findByQrCode(qrCode);
-  
+      const url = new URL(qrCode);
+      const id = parseInt(url.pathname.split('/').pop(), 10);
+
+      if (isNaN(id)) {
+        throw new BadRequestException('Le code QR ne contient pas un ID valide.');
+      }
+
+      const article = await this.articleService.getArticleDetails(id);
+
       if (!article) {
         return { message: 'Aucun article trouvé avec ce code QR.' };
       }
-  
+
       return article;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -148,79 +228,94 @@ export class ArticleController {
   }
 
   @Post('/search-by-barcode')
-async searchByBarcode(@Body('barcode') barcode: string): Promise<ResponseArticleDto | { message: string }> {
-  try {
-    const article = await this.articleService.findByBarcode(barcode);
+  async searchByBarcode(@Body('barcode') barcode: string): Promise<ResponseArticleDto | { message: string }> {
+    try {
+      const article = await this.articleService.findByBarcode(barcode);
 
-    if (!article) {
-      return { message: 'Aucun article trouvé avec ce code-barres.' };
+      if (!article) {
+        return { message: 'Aucun article trouvé avec ce code-barres.' };
+      }
+
+      return article;
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-
-    return article;
-  } catch (error) {
-    throw new BadRequestException(error.message);
   }
-}
 
-// Dans ArticleController.ts
+  @Post('/search-by-scan')
+  async searchByScan(@Body('scannedData') scannedData: string): Promise<ResponseArticleDto | { message: string }> {
+    try {
+      const article = await this.articleService.ScanByBarcode(scannedData);
 
-@Post('/search-by-scan')
-async searchByScan(@Body('scannedData') scannedData: string): Promise<ResponseArticleDto | { message: string }> {
-  try {
-    const article = await this.articleService.ScanByBarcode(scannedData);
+      if (!article) {
+        return { message: 'Aucun article trouvé avec ce code-barres.' };
+      }
 
-    if (!article) {
-      return { message: 'Aucun article trouvé avec ce code-barres.' };
+      return article;
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-
-    return article;
-  } catch (error) {
-    throw new BadRequestException(error.message);
   }
-}
 
-
-/*
   @Post('import-csv')
-@UseInterceptors(FileInterceptor('file', {
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10 Mo
-  },
-}))
-async importCSV(@UploadedFile() file: Express.Multer.File) {
-  if (!file) {
-    throw new BadRequestException('Aucun fichier n\'a été envoyé');
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10 Mo
+    },
+  }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async importCSV(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Aucun fichier n\'a été envoyé');
+    }
+
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    if (fileExtension !== '.csv') {
+      throw new BadRequestException('Seuls les fichiers CSV sont autorisés');
+    }
+
+    try {
+      const importedArticles = await this.articleService.importCSV(file);
+      return {
+        message: `${importedArticles.length} articles ont été importés avec succès.`,
+        data: importedArticles,
+      };
+    } catch (error) {
+      console.error('Erreur lors de l\'importation du fichier CSV:', error);
+      throw new BadRequestException('Une erreur est survenue lors de l\'importation du fichier CSV');
+    }
   }
 
-  console.log('Fichier reçu:', file); // Log pour déboguer
-  console.log('Nom du fichier:', file.originalname);
-  console.log('Taille du fichier:', file.size);
-  console.log('Type MIME:', file.mimetype);
-
-  const fileExtension = path.extname(file.originalname).toLowerCase();
-  if (fileExtension !== '.csv') {
-    throw new BadRequestException('Seuls les fichiers CSV sont autorisés');
-  }
-
-  try {
-    const importedArticles = await this.articleService.importCSV(file);
-    return {
-      message: `${importedArticles.length} articles ont été importés avec succès.`,
-      data: importedArticles,
-    };
-  } catch (error) {
-    console.error('Erreur lors de l\'importation du fichier CSV:', error);
-    throw new BadRequestException('Une erreur est survenue lors de l\'importation du fichier CSV');
-  }
-}*/
-/*@Post('import-excel')
-  @UseInterceptors(FileInterceptor('file')) // 'file' doit correspondre au nom du champ dans FormData
+  @Post('import-excel')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   async importExcel(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Aucun fichier n\'a été envoyé.');
     }
 
-    // Vérifiez le type de fichier
     if (
       !file.mimetype.includes('excel') &&
       !file.mimetype.includes('spreadsheet')
@@ -229,10 +324,134 @@ async importCSV(@UploadedFile() file: Express.Multer.File) {
     }
 
     try {
-      const result = await this.articleImportService.importExcel(file);
+      const result = await this.articleService.importExcel(file);
       return result;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }*/
+  }
+
+  @Get(':id/history')
+  @ApiParam({
+    name: 'id',
+    type: 'number',
+    required: true,
+  })
+  async getArticleHistory(@Param('id') id: number): Promise<any[]> {
+    const historyEntries = await this.articleService.getArticleHistory(id);
+
+    return historyEntries.map((entry) => ({
+      version: entry.version,
+      changes: entry.changes,
+      date: entry.date,
+    }));
+  }
+
+  @Get(':id/sales-performance')
+  @ApiParam({ name: 'id', type: 'number' })
+  async getSalesPerformance(@Param('id') id: number) {
+    return this.articleService.getSalesPerformance(id);
+  }
+
+  @Get('popular')
+  async getPopularArticles(@Query('limit') limit: number = 10) {
+    return this.articleService.getPopularArticles(limit);
+  }
+
+  @Get('stagnant')
+  async getStagnantArticles(@Query('limit') limit: number = 10) {
+    return this.articleService.getStagnantArticles(limit);
+  }
+
+  @Post(':id/optimize-stock')
+  @ApiParam({ name: 'id', type: 'number' })
+  async optimizeStock(@Param('id') id: number, @Body('newStockLevel') newStockLevel: number) {
+    return this.articleService.optimizeStock(id, newStockLevel);
+  }
+
+  @Post(':id/adjust-price')
+  @ApiParam({ name: 'id', type: 'number' })
+  async adjustPrice(@Param('id') id: number, @Body('newPrice') newPrice: number) {
+    return this.articleService.adjustPrice(id, newPrice);
+  }
+
+  @Get('stock-alerts')
+  async getStockAlerts(@Query('threshold') threshold: number = 10) {
+    return this.articleService.getStockAlerts(threshold);
+  }
+
+  @Get('promotion-recommendations')
+  async getPromotionRecommendations() {
+    return this.articleService.getPromotionRecommendations();
+  }
+
+  @Get('analyze-levels/:id')
+  @ApiParam({
+    name: 'id',
+    type: 'number',
+    required: true,
+    description: 'ID de l\'article à analyser',
+  })
+  async analyzeArticlesByLevels(@Param('id') id: string): Promise<{ message: string; data: any }> {
+    try {
+      const parsedId = parseInt(id, 10);
+      if (isNaN(parsedId)) {
+        throw new BadRequestException('ID doit être un nombre valide.');
+      }
+
+      return await this.articleService.analyzeArticlesByLevels(parsedId);
+    } catch (error) {
+      console.error('Erreur dans analyzeArticlesByLevels:', error);
+      throw new BadRequestException('Erreur lors de l\'analyse des articles. Détails : ' + error.message);
+    }
+  }
+
+  @Get(':articleId/generate-files')
+  async generateVersionFiles(@Param('articleId') articleId: number): Promise<string> {
+    try {
+      // Récupérer l'article actuel
+      const article = await this.articleService.findOneById(articleId);
+      if (!article) {
+        throw new NotFoundException('Article non trouvé.');
+      }
+
+      // Générer les fichiers pour cet article
+      return await this.articleHistoryService.generateVersionFile(article);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  @Get(':articleId/download-pdf')
+  @ApiParam({ name: 'articleId', type: 'number' })
+  async downloadPdf(
+    @Param('articleId') articleId: number,
+    @Res() res: Response, // Utilisez Response pour envoyer le fichier
+  ) {
+    try {
+      // Récupérer l'article
+      const article = await this.articleService.findOneById(articleId);
+      if (!article) {
+        throw new NotFoundException('Article non trouvé.');
+      }
+
+      // Générer le fichier PDF
+      const pdfFilePath = await this.articleHistoryService.generateVersionFile(article);
+
+      // Envoyer le fichier en réponse
+      res.download(pdfFilePath, `article_${articleId}_fiche.pdf`, (err) => {
+        if (err) {
+          console.error('Erreur lors du téléchargement du fichier :', err);
+          res.status(500).send('Erreur lors du téléchargement du fichier.');
+        }
+      });
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF :', error);
+      res.status(500).send('Erreur lors de la génération du PDF.');
+    }
+  }
+
+  
+
+  
 }

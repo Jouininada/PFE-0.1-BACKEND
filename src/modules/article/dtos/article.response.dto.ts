@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsString, IsDate, IsOptional, IsBoolean } from 'class-validator';
 
 export class ResponseArticleDto {
   @ApiProperty({ example: 1, type: Number })
@@ -14,10 +14,6 @@ export class ResponseArticleDto {
   @ApiProperty({ example: faker.commerce.productDescription(), type: String })
   @IsString()
   description: string;
-
-  @ApiProperty({ example: faker.random.alphaNumeric(10), type: String })
-  @IsString()
-  sku: string;
 
   @ApiProperty({ example: 'Électronique', type: String })
   @IsString()
@@ -45,5 +41,40 @@ export class ResponseArticleDto {
 
   @ApiProperty({ example: '123456789012', type: String })
   @IsString()
-  barcode: string; // Nouveau champ pour le code-barres
+  barcode: string;
+
+  @ApiProperty({ example: 'draft', type: String })
+  @IsString()
+  status: string;
+
+  @ApiProperty({ example: 1, type: Number })
+  @IsNumber()
+  version: number;
+
+  @ApiProperty({ type: Date, required: false })
+  @IsDate()
+  @IsOptional()
+  createdAt?: Date;
+
+  @ApiProperty({ type: Date, required: false })
+  @IsDate()
+  @IsOptional()
+  updatedAt?: Date;
+
+  @ApiProperty({ type: Date, required: false })
+  @IsDate()
+  @IsOptional()
+  deletedAt?: Date;
+
+  @ApiProperty({ type: Boolean, required: false })
+  @IsBoolean()
+  @IsOptional()
+  isDeletionRestricted?: boolean;
+
+  @ApiProperty({ type: 'array', items: { type: 'object' } })
+  history: Array<{
+    version: number;
+    changes: Record<string, { oldValue: any; newValue: any }>;
+    date: Date;
+  }>;
 }

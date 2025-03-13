@@ -26,10 +26,16 @@ export abstract class DatabaseAbstractRepository<T>
     this.txHost = txHost;
   }
 
+  /**
+   * Retourne le repository actuel, en tenant compte de la transaction si elle existe.
+   */
   private getRepository(): Repository<T> {
     return this.txHost?.tx?.getRepository(this.entity.target) || this.entity;
   }
 
+  /**
+   * Crée un QueryBuilder pour effectuer des requêtes personnalisées.
+   */
   public async createQueryBuilder(
     alias?: string,
     queryRunner?: QueryRunner,
@@ -37,6 +43,9 @@ export abstract class DatabaseAbstractRepository<T>
     return this.getRepository().createQueryBuilder(alias, queryRunner);
   }
 
+  /**
+   * Retourne les noms des entités liées à l'entité actuelle.
+   */
   public async getRelatedEntityNames(): Promise<string[]> {
     return this.getRepository()
       .metadata.relations.filter(
@@ -46,6 +55,9 @@ export abstract class DatabaseAbstractRepository<T>
       .map((relation) => relation.propertyName);
   }
 
+  /**
+   * Recherche une entité par son ID.
+   */
   public async findOneById(id: string | number): Promise<T> {
     const options: FindOptionsWhere<T> = {
       id: id,
@@ -53,22 +65,44 @@ export abstract class DatabaseAbstractRepository<T>
     return await this.getRepository().findOneBy(options);
   }
 
+  /**
+   * Enregistre une entité.
+   */
   public async save(data: DeepPartial<T>): Promise<T> {
     return await this.getRepository().save(data);
   }
 
+  /**
+   * Enregistre plusieurs entités.
+   */
   public async saveMany(data: DeepPartial<T>[]): Promise<T[]> {
     return this.getRepository().save(data);
   }
 
+  /**
+   * Crée une nouvelle instance d'entité sans l'enregistrer en base de données.
+   */
   public create(data: DeepPartial<T>): T {
     return this.getRepository().create(data);
   }
 
+  /**
+   * Crée plusieurs instances d'entités sans les enregistrer en base de données.
+   */
   public createMany(data: DeepPartial<T>[]): T[] {
     return this.getRepository().create(data);
   }
 
+  /**
+   * Recherche des entités en fonction des options fournies.
+   */
+  public async find(options?: FindManyOptions<T>): Promise<T[]> {
+    return this.getRepository().find(options);
+  }
+
+  /**
+   * Met à jour une entité par son ID.
+   */
   public async update(
     id: string | number,
     data: QueryDeepPartialEntity<T>,
@@ -76,64 +110,113 @@ export abstract class DatabaseAbstractRepository<T>
     return await this.getRepository().update(id, data);
   }
 
+  /**
+   * Met à jour plusieurs entités.
+   */
   public async updateMany(data: DeepPartial<T>[]): Promise<T[]> {
     return await this.getRepository().save(data);
   }
 
+  /**
+   * Recherche une entité en fonction d'une condition spécifique.
+   */
   public async findByCondition(filterCondition: FindOneOptions<T>): Promise<T> {
     return await this.getRepository().findOne(filterCondition);
   }
 
+  /**
+   * Recherche des entités avec des relations spécifiques.
+   */
   public async findWithRelations(relations: FindManyOptions<T>): Promise<T[]> {
     return await this.getRepository().find(relations);
   }
 
+  /**
+   * Recherche une entité en fonction des options fournies.
+   */
   public async findOne(options: FindOneOptions<T>): Promise<T | undefined> {
     return this.getRepository().findOne(options);
   }
 
+  /**
+   * Recherche toutes les entités en fonction des options fournies.
+   */
   public async findAll(options?: FindManyOptions<T>): Promise<T[]> {
     return await this.getRepository().find(options);
   }
 
+  /**
+   * Supprime une entité de la base de données.
+   */
   public async remove(data: T): Promise<T> {
     return await this.getRepository().remove(data);
   }
 
+  /**
+   * Prépare une entité pour la mise à jour.
+   */
   public async preload(entityLike: DeepPartial<T>): Promise<T> {
     return await this.getRepository().preload(entityLike);
   }
 
-  public async getTotalCount(options: FindOneOptions<T> = {}): Promise<number> {
-    return this.getRepository().count(options);
+  /**
+   * Retourne le nombre total d'entités.
+   */
+  public async getTotalCount(options?: FindManyOptions<T>): Promise<number> {
+    try {
+      // Vérifier que les options sont valides
+      if (!options || typeof options !== 'object') {
+        throw new Error('Options de requête invalides.');
+      }
+  
+      // Compter le nombre total d'entités
+      return await this.getRepository().count(options);
+    } catch (error) {
+      console.error('Erreur dans getTotalCount:', error);
+      throw new Error('Erreur lors du comptage des entités.');
+    }
   }
-
+  /**
+   * Supprime une entité par son ID.
+   */
   public async delete(id: string | number): Promise<void> {
     await this.getRepository().delete(id);
   }
 
+  /**
+   * Supprime une entité de manière logicielle (soft delete).
+   */
   public async softDelete(id: string | number): Promise<T> {
     const entity = await this.findOneById(id);
+    if (!entity) {
+      throw new Error(`Entity with ID ${id} not found.`);
+    }
     await this.getRepository().softDelete(id);
     return entity;
   }
 
+  /**
+   * Supprime plusieurs entités de manière logicielle (soft delete).
+   */
   public async softDeleteMany(ids: (string | number)[]): Promise<T[]> {
     const options: FindManyOptions<T> = {
-      id: In(ids),
-    } as unknown as FindManyOptions<T>;
+     // where: { id: In(ids) } as FindOptionsWhere<T>,
+    };
 
     const entities = await this.findAll(options);
 
     await Promise.all(
       ids.map(async (id) => {
-        return this.getRepository().softDelete(id);
+        await this.getRepository().softDelete(id);
       }),
     );
 
     return entities;
   }
 
+  /**
+   * Met à jour les associations entre entités.
+   */
   public async updateAssociations<U extends { id?: number | string }>({
     existingItems,
     updatedItems,
@@ -153,7 +236,7 @@ export abstract class DatabaseAbstractRepository<T>
     const keptItems = [];
     const eliminatedItems = [];
 
-    // Identify eliminated and kept items
+    // Identifier les éléments supprimés et conservés
     for (const existingItem of existingItems) {
       const existsInUpdate = updatedItems.some(
         (updatedItem) => updatedItem.id === existingItem.id,
@@ -165,7 +248,7 @@ export abstract class DatabaseAbstractRepository<T>
       }
     }
 
-    // Identify new items
+    // Identifier les nouveaux éléments
     for (const updatedItem of updatedItems) {
       if (!updatedItem.id) {
         newItems.push(await onCreate(updatedItem));
@@ -179,6 +262,9 @@ export abstract class DatabaseAbstractRepository<T>
     };
   }
 
+  /**
+   * Met à jour les associations entre entités avec des clés spécifiques.
+   */
   async updateAssociations2<U extends Record<string, any>>({
     existingItems,
     updatedItems,
@@ -205,6 +291,7 @@ export abstract class DatabaseAbstractRepository<T>
     const isSameCombination = (a: U, b: U) =>
       a[key1] === b[key1] && a[key2] === b[key2];
 
+    // Identifier les éléments supprimés et conservés
     for (const existingItem of existingItems) {
       const existsInUpdate = updatedItems.some((updatedItem) =>
         isSameCombination(updatedItem, existingItem),
@@ -216,6 +303,7 @@ export abstract class DatabaseAbstractRepository<T>
       }
     }
 
+    // Identifier les nouveaux éléments
     for (const updatedItem of updatedItems) {
       const existsInExisting = existingItems.some((existingItem) =>
         isSameCombination(updatedItem, existingItem),
@@ -232,6 +320,9 @@ export abstract class DatabaseAbstractRepository<T>
     };
   }
 
+  /**
+   * Supprime toutes les entités de la base de données.
+   */
   public async deleteAll(): Promise<void> {
     await this.getRepository().clear();
   }

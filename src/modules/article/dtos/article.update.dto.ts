@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { Column } from 'typeorm';
 
 export class UpdateArticleDto {
   @ApiProperty({ required: false })
@@ -11,11 +12,6 @@ export class UpdateArticleDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @ApiProperty({ required: false })
-  @IsString()
-  @IsOptional()
-  sku?: string;
 
   @ApiProperty({ required: false })
   @IsString()
@@ -45,5 +41,17 @@ export class UpdateArticleDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  barcode?: string; // Nouveau champ pour le code-barres
+  barcode?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  status?: string; // Nouveau champ pour le statut
+
+  @ApiProperty({ type: 'array', items: { type: 'object' } })
+  history: Array<{
+    version: number;
+    changes: Record<string, { oldValue: any; newValue: any }>;
+    date: Date;
+  }>;
 }
