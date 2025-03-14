@@ -13,6 +13,7 @@ import {
   NotFoundException,
   Res,
 } from '@nestjs/common';
+import { Response } from 'express'; // Importez Response pour gérer la réponse HTTP
 import { ApiTags, ApiParam, ApiConsumes, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { PageDto } from 'src/common/database/dtos/database.page.dto';
 import { ArticleService } from '../services/article.service';
@@ -24,9 +25,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import { QrCodeService } from '../services/codeQr.service';
 import { BarcodeService } from '../services/BarcodeService';
+import * as fs from 'fs';
+import * as archiver from 'archiver';
 import { ArticleHistoryService } from 'src/modules/article-history/services/article-history.service';
-import { ResponseArticleHistoryDto } from 'src/modules/article-history/dtos/responseArticleHistoryDto';
-import { Response } from 'express'; 
+import puppeteer from 'puppeteer';
+
 
 @ApiTags('article')
 @Controller({
@@ -36,16 +39,13 @@ import { Response } from 'express';
 export class ArticleController {
   constructor(
     private readonly articleService: ArticleService,
+    private readonly articleHistoryService: ArticleHistoryService,
     private readonly qrCodeService: QrCodeService,
     private readonly barCodeService: BarcodeService,
-    private readonly articleHistoryService: ArticleHistoryService,
-
   ) {}
 
   @Post('/save-with-filter-title')
-  async saveWithFilterTitle(
-    @Body() createArticleDto: CreateArticleDto,
-  ): Promise<ResponseArticleDto | { message: string }> {
+  async saveWithFilterTitle(@Body() createArticleDto: CreateArticleDto): Promise<ResponseArticleDto | { message: string }> {
     const existingArticle = await this.articleService.saveWithFilterTitle(createArticleDto);
 
     if (existingArticle) {
@@ -69,38 +69,25 @@ export class ArticleController {
       },
     },
   })
-  async findAll(
-    @Query() options: IQueryObject,
-  ): Promise<{ total: number }> {
+  async findAll(@Query() options: IQueryObject): Promise<{ total: number }> {
     return await this.articleService.findAll(options);
   }
 
   @Get('/list')
-  async findAllPaginated(
-    @Query() query: IQueryObject,
-  ): Promise<PageDto<ResponseArticleDto>> {
+  async findAllPaginated(@Query() query: IQueryObject): Promise<PageDto<ResponseArticleDto>> {
     return await this.articleService.findAllPaginated(query);
   }
 
   @Get('/:id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-  })
-  async findOneById(
-    @Param('id') id: string,
-    @Query() query: IQueryObject,
-  ): Promise<ResponseArticleDto> {
+  @ApiParam({ name: 'id', type: 'number', required: true })
+  async findOneById(@Param('id') id: string, @Query() query: IQueryObject): Promise<ResponseArticleDto> {
     try {
       const parsedId = parseInt(id, 10);
       if (isNaN(parsedId)) {
         throw new BadRequestException('ID doit être un nombre valide.');
       }
 
-      query.filter
-        ? (query.filter += `,id||$eq||${parsedId}`)
-        : (query.filter = `id||$eq||${parsedId}`);
+      query.filter ? (query.filter += `,id||$eq||${parsedId}`) : (query.filter = `id||$eq||${parsedId}`);
 
       return await this.articleService.findOneByCondition(query);
     } catch (error) {
@@ -110,41 +97,18 @@ export class ArticleController {
   }
 
   @Post('/save')
-  async save(
-    @Body() createArticleDto: CreateArticleDto,
-  ): Promise<ResponseArticleDto> {
+  async save(@Body() createArticleDto: CreateArticleDto): Promise<ResponseArticleDto> {
     return await this.articleService.save(createArticleDto);
   }
-  
-  @Put('/update/:id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-  })
 
-  
-  async update(
-    @Param('id') id: number,
-    @Body() updateArticleDto: UpdateArticleDto,
-  ): Promise<ResponseArticleDto | { message: string }> {
-    try {
-      const updatedArticle = await this.articleService.update(id, updateArticleDto);
-      return updatedArticle;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return { message: 'Article non trouvé.' };
-      }
-      throw error;
-    }
+  @Put('/:id')
+  @ApiParam({ name: 'id', type: 'number', required: true })
+  async update(@Param('id') id: number, @Body() updateArticleDto: UpdateArticleDto): Promise<ResponseArticleDto> {
+    return await this.articleService.update(id, updateArticleDto);
   }
 
   @Get('/article-details/:id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-  })
+  @ApiParam({ name: 'id', type: 'number', required: true })
   async getArticleDetails(@Param('id') id: number): Promise<ResponseArticleDto> {
     try {
       if (isNaN(id)) {
@@ -163,12 +127,9 @@ export class ArticleController {
       throw new BadRequestException('Erreur lors de la récupération des détails de l\'article.');
     }
   }
+
   @Delete('/delete/:id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-  })
+  @ApiParam({ name: 'id', type: 'number', required: true })
   async delete(@Param('id') id: number): Promise<ResponseArticleDto> {
     return await this.articleService.softDelete(id);
   }
@@ -184,11 +145,7 @@ export class ArticleController {
   }
 
   @Get('/qr/:id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-  })
+  @ApiParam({ name: 'id', type: 'number', required: true })
   async getQrCode(@Param('id') id: number) {
     const article = await this.articleService.findOneById(id);
     if (!article.qrCode) {
@@ -258,23 +215,9 @@ export class ArticleController {
   }
 
   @Post('import-csv')
-  @UseInterceptors(FileInterceptor('file', {
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10 Mo
-    },
-  }))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
   async importCSV(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Aucun fichier n\'a été envoyé');
@@ -300,26 +243,13 @@ export class ArticleController {
   @Post('import-excel')
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
   async importExcel(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Aucun fichier n\'a été envoyé.');
     }
 
-    if (
-      !file.mimetype.includes('excel') &&
-      !file.mimetype.includes('spreadsheet')
-    ) {
+    if (!file.mimetype.includes('excel') && !file.mimetype.includes('spreadsheet')) {
       throw new BadRequestException('Seuls les fichiers Excel sont autorisés.');
     }
 
@@ -332,14 +262,9 @@ export class ArticleController {
   }
 
   @Get(':id/history')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-  })
+  @ApiParam({ name: 'id', type: 'number', required: true })
   async getArticleHistory(@Param('id') id: number): Promise<any[]> {
     const historyEntries = await this.articleService.getArticleHistory(id);
-
     return historyEntries.map((entry) => ({
       version: entry.version,
       changes: entry.changes,
@@ -386,12 +311,7 @@ export class ArticleController {
   }
 
   @Get('analyze-levels/:id')
-  @ApiParam({
-    name: 'id',
-    type: 'number',
-    required: true,
-    description: 'ID de l\'article à analyser',
-  })
+  @ApiParam({ name: 'id', type: 'number', required: true, description: 'ID de l\'article à analyser' })
   async analyzeArticlesByLevels(@Param('id') id: string): Promise<{ message: string; data: any }> {
     try {
       const parsedId = parseInt(id, 10);
@@ -406,22 +326,7 @@ export class ArticleController {
     }
   }
 
-  @Get(':articleId/generate-files')
-  async generateVersionFiles(@Param('articleId') articleId: number): Promise<string> {
-    try {
-      // Récupérer l'article actuel
-      const article = await this.articleService.findOneById(articleId);
-      if (!article) {
-        throw new NotFoundException('Article non trouvé.');
-      }
-
-      // Générer les fichiers pour cet article
-      return await this.articleHistoryService.generateVersionFile(article);
-    } catch (error) {
-      throw new NotFoundException(error.message);
-    }
-  }
-
+  
   @Get(':articleId/download-pdf')
   @ApiParam({ name: 'articleId', type: 'number' })
   async downloadPdf(
@@ -450,8 +355,6 @@ export class ArticleController {
       res.status(500).send('Erreur lors de la génération du PDF.');
     }
   }
-
-  
 
   
 }
