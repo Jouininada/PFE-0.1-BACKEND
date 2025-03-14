@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Param,
@@ -28,10 +29,12 @@ export class StorageController {
   async getFileByIdOrSlug(@Param('id') id: number): Promise<UploadEntity> {
     return this.storageService.findOneById(id);
   }
+
   @Get('/all')
   async findAll(@Query() options: IQueryObject): Promise<UploadEntity[]> {
     return await this.storageService.findAll(options);
   }
+
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -48,10 +51,19 @@ export class StorageController {
     },
   })
   @Post('upload/multiple')
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10 Mo par fichier
+      },
+    }),
+  )
   async uploadMultipleFiles(
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<UploadEntity[]> {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files uploaded.');
+    }
     return this.storageService.storeMultipleFiles(files);
   }
 
@@ -67,14 +79,21 @@ export class StorageController {
       },
     },
   })
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-  ): Promise<UploadEntity> {
-    return this.storageService.store(file);
-  }
 
+  
+  @Post('upload')
+@UseInterceptors(FileInterceptor('file', {
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10 Mo
+  },
+}))
+async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<UploadEntity> {
+  console.log('File received:', file); // Log le fichier reçu
+  if (!file) {
+    throw new BadRequestException('No file uploaded.');
+  }
+  return this.storageService.store(file);
+}
   @Get('/file/slug/:slug')
   async downloadFileBySlug(
     @Param('slug') slug: string,

@@ -31,6 +31,7 @@ export class StorageService {
     }
     return upload;
   }
+
   async findOneById(id: number): Promise<UploadEntity> {
     const upload = await this.uploadRepository.findOneById(id);
     if (!upload) {
@@ -48,44 +49,54 @@ export class StorageService {
   }
 
   async store(file: Express.Multer.File): Promise<UploadEntity> {
+    if (!file) {
+      throw new StorageBadRequestException('Aucun fichier fourni.');
+    }
+  
     const slug = uuidv4();
     const filename = file.originalname;
     const mimetype = file.mimetype;
     const size = file.size;
-
+  
     const extension = mime.extension(mimetype) || '';
     let relativePath = slug;
-
+  
     if (extension) {
       relativePath = `${slug}.${extension}`;
     }
-
-    const upload = this.uploadRepository.save({
+  
+    const upload = await this.uploadRepository.save({
       slug,
       filename,
       mimetype,
       size,
       relativePath,
     });
-
+  
     const destinationFile = join(this.rootLocation, relativePath);
     try {
       if (!file.buffer || file.buffer.length === 0) {
         throw new StorageBadRequestException('Failed to store empty file.');
       }
-
+  
       await fs.mkdir(this.rootLocation, { recursive: true });
       await fs.writeFile(destinationFile, file.buffer);
     } catch (error) {
+      // Supprimer l'entrée de la base de données si l'écriture du fichier échoue
+      await this.uploadRepository.softDelete(upload.id);
       throw new StorageBadRequestException(
-        'Failed to store file : ' + error.message,
+        'Failed to store file: ' + error.message,
       );
     }
-
+  
     return upload;
   }
 
-  async storeMultipleFiles(files: Express.Multer.File[]) {
+  async storeMultipleFiles(files: Express.Multer.File[]): Promise<UploadEntity[]> {
+    if (!files || files.length === 0) {
+      throw new StorageBadRequestException('No files uploaded.');
+    }
+
     const uploads = await Promise.all(
       files.map(async (file) => {
         return this.store(file);
@@ -107,10 +118,7 @@ export class StorageService {
   }
 
   async duplicate(id: number): Promise<UploadEntity> {
-    //Find the original upload entity
     const originalUpload = await this.findOneById(id);
-
-    //Generate a new slug and file path for the duplicate
     const newSlug = uuidv4();
     const originalFilePath = join(
       this.rootLocation,
@@ -125,7 +133,6 @@ export class StorageService {
 
     const newFilePath = join(this.rootLocation, newRelativePath);
 
-    //Copy the file on the filesystem
     try {
       await fs.copyFile(originalFilePath, newFilePath);
     } catch (error) {
@@ -134,7 +141,6 @@ export class StorageService {
       );
     }
 
-    //Save the duplicated upload entity in the database
     const duplicatedUpload = await this.uploadRepository.save({
       slug: newSlug,
       filename: originalUpload.filename,
@@ -163,14 +169,14 @@ export class StorageService {
       return upload;
     } catch (error) {
       throw new StorageBadRequestException(
-        `Failed to delete file: ${upload.slug}` + error.message,
+        `Failed to delete file: ${upload.slug}. ${error.message}`,
       );
     }
   }
 
   async deleteMany(ids: number[]): Promise<void> {
-    for (const id in ids) {
-      await this.delete(ids[id]);
+    for (const id of ids) {
+      await this.delete(id);
     }
   }
 

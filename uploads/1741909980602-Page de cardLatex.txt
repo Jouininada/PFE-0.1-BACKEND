@@ -1,0 +1,109 @@
+% !TEX program = xelatex
+\documentclass[a4paper,12pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{fontspec}
+\usepackage{xcolor,graphicx}
+\usepackage[top=0.6in,bottom=0.6in,right=1in,left=1in]{geometry}
+\usepackage{polyglossia}
+\graphicspath{{images/}{images_pfe/}}
+\newlength\figureheight
+\newlength\figurewidth
+
+\setmainlanguage{french}
+\setotherlanguage{arabic}
+\newfontfamily\arabicfont[Script=Arabic,Scale=1.1]{ScheherazadeNew-Regular}
+
+\begin{document}
+\begin{titlepage}
+    \centering
+    \begin{minipage}{0cm}
+        \begin{center}
+            \includegraphics[width=2cm]{iset_logo.png}
+        \end{center}
+    \end{minipage}\hfill
+    % neoledge logo
+    \begin{minipage}{10cm}
+        \begin{flushright}
+            \includegraphics[width=2cm]{neoledge_logo.png}\\
+        \end{flushright}
+    \end{minipage}\hfill\\
+    {\small République Tunisienne }\\
+    \begin{Arabic}
+    الجمهورية التونسية \\
+    \end{Arabic}
+    {\small Ministère de l'Enseignement Supérieur et de la Recherche Scientifique  }\\
+        \begin{Arabic}
+          وزارة التعليم العالي والبحث العلمي   \\
+    \end{Arabic}
+    {\small Institut Supérieur des Etudes Technologiques de Bizerte  }\\
+        \begin{Arabic}
+          المعهد العالي للدراسات التكنولوجية ببنزرت   \\
+    \end{Arabic}
+\rule{\linewidth}{0.3mm} \\[0.4cm]
+
+\vspace{5mm}
+{\large \bfseries Rapport de stage de fin d'études}\\[0.5cm]
+{\large Pour l'obtention du Licence Appliquée en Développement des Systèmes d'Information}\\[0.5cm]
+{\large \bfseries{Option : Développement des Systèmes d'Information} \\ }
+\vspace{10mm}
+% Title
+\rule{\linewidth}{0.3mm} \\[0.4cm]
+{ \huge \bfseries Conception et réalisation d'une application mobile de gestion électronique de document\\[0.4cm] }
+\rule{\linewidth}{0.3mm} \\[1cm]
+\vspace{10mm}
+
+% Author and supervisor
+\noindent
+
+\begin{minipage}{7cm}
+	\begin{center}
+		\vspace{-7mm}
+\begin{flushleft} \large
+  \emph{Réalisé par :}\\
+  \textsc{CHARRAD} Raed \\
+  \textsc{CHLENDI} Mohamed youssef 
+\end{flushleft}
+	\end{center}
+\end{minipage}\hfill
+\begin{minipage}{8cm}
+  \vspace{-7mm}
+  \begin{flushright} \large
+    \begin{flushleft} \large
+    \emph{Encadré par :} \\
+    Mme. \textsc{ALLOUCHE} Najla  (ISETB)\\[0.1cm]
+    M. \textsc{MEJAI} Rabii  (NeoLedge)\\
+    \end{flushleft}
+  \end{flushright}
+\end{minipage}
+\hfill\\
+\vspace{1cm}
+\begin{tabular}{ll}
+  % Periode de stage
+\large \textsc{Période de stage :} & \large Du 06/02/2023 au 28/05/2023\\
+% Organisme d'accueil
+\large \textsc{Organisme d'accueil :} & \large NeoLedge\\
+% Lieu de stage
+\large \textsc{Lieu de stage :} & \large NeoLedge, Zarzis, Tunisie\\
+% Tel
+\large \textsc{Téléphone :} & \large +216 ********\\
+% Email
+\large \textsc{Email :} & \large contact@neoledge.com\\
+
+\end{tabular}
+
+
+% {\large \textit{Soutenu le x Juin xxxx, Devant le jury composé de : }}\\[0.5cm]
+
+% \centering
+% \begin{tabular}{lll}
+% \large Mme. xxxxx \textsc{xxxxx} : & \large ISETB & \large - Présidente \\[0.1cm]
+% \large Mme. xxxxx \textsc{xxxxx} : & \large ISETB & \large - Examinateur \\[0.1cm]
+% \large M. xxxxx \textsc{xxxxx} : & \large ISETB & \large - Rapporteur
+% \end{tabular}
+
+\vspace{20mm}
+% Bottom of the page
+{\large Promotion : 2022/2023}
+
+\end{titlepage}
+\end{document}
