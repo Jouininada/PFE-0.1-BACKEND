@@ -362,11 +362,23 @@ export class ArticleService {
     id: number,
     updateArticleDto: UpdateArticleDto,
   ): Promise<ArticleEntity> {
+    // Récupérer l'article existant
     const article = await this.articleRepository.findOneById(id);
   
     if (!article) {
       throw new NotFoundException('Article non trouvé');
     }
+  
+    // Incrémenter la version
+    article.version += 1;
+  
+    // Enregistrer les modifications dans l'historique
+    const changes = this.getChanges(article, updateArticleDto);
+    await this.articleHistoryService.createHistoryEntry({
+      version: article.version,
+      changes,
+      articleId: article.id,
+    });
   
     // Mettre à jour les champs de l'article
     Object.assign(article, updateArticleDto);
@@ -375,6 +387,24 @@ export class ArticleService {
     return await this.articleRepository.save(article);
   }
 
+  private getChanges(
+    existingArticle: ArticleEntity,
+    newData: UpdateArticleDto,
+  ): Record<string, { oldValue: any; newValue: any }> {
+    const changes: Record<string, { oldValue: any; newValue: any }> = {};
+  
+    // Comparer chaque champ
+    Object.keys(newData).forEach((key) => {
+      if (existingArticle[key] !== newData[key]) {
+        changes[key] = {
+          oldValue: existingArticle[key],
+          newValue: newData[key],
+        };
+      }
+    });
+  
+    return changes;
+  }
   /**
    * Récupère les performances des ventes d'un article.
    */

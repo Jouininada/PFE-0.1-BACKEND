@@ -50,46 +50,38 @@ export class StorageService {
 
   async store(file: Express.Multer.File): Promise<UploadEntity> {
     if (!file) {
-      throw new StorageBadRequestException('Aucun fichier fourni.');
+      throw new Error('No file provided');
     }
   
-    const slug = uuidv4();
-    const filename = file.originalname;
-    const mimetype = file.mimetype;
-    const size = file.size;
-  
-    const extension = mime.extension(mimetype) || '';
-    let relativePath = slug;
-  
-    if (extension) {
-      relativePath = `${slug}.${extension}`;
-    }
-  
-    const upload = await this.uploadRepository.save({
-      slug,
-      filename,
-      mimetype,
-      size,
-      relativePath,
-    });
-  
-    const destinationFile = join(this.rootLocation, relativePath);
     try {
-      if (!file.buffer || file.buffer.length === 0) {
-        throw new StorageBadRequestException('Failed to store empty file.');
-      }
+      const slug = uuidv4();
+      const filename = file.originalname;
+      const mimetype = file.mimetype;
+      const size = file.size;
+      const extension = mime.extension(mimetype) || '';
+      const relativePath = extension ? `${slug}.${extension}` : slug;
   
-      await fs.mkdir(this.rootLocation, { recursive: true });
-      await fs.writeFile(destinationFile, file.buffer);
+      const upload = new UploadEntity();
+      upload.slug = slug;
+      upload.filename = filename;
+      upload.mimetype = mimetype;
+      upload.size = size;
+      upload.relativePath = relativePath;
+  
+      console.log('Creating upload entity:', upload); // Log l'entité
+  
+      const destinationPath = join(__dirname, '..', '..', 'uploads', relativePath);
+      await fs.mkdir(join(__dirname, '..', '..', 'uploads'), { recursive: true });
+      await fs.writeFile(destinationPath, file.buffer);
+  
+      const savedUpload = await this.uploadRepository.save(upload);
+      console.log('Upload entity saved:', savedUpload); // Log l'entité sauvegardée
+  
+      return savedUpload;
     } catch (error) {
-      // Supprimer l'entrée de la base de données si l'écriture du fichier échoue
-      await this.uploadRepository.softDelete(upload.id);
-      throw new StorageBadRequestException(
-        'Failed to store file: ' + error.message,
-      );
+      console.error('Error storing file:', error);
+      throw new Error('Failed to store file');
     }
-  
-    return upload;
   }
 
   async storeMultipleFiles(files: Express.Multer.File[]): Promise<UploadEntity[]> {

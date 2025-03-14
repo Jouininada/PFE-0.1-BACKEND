@@ -326,7 +326,7 @@ export class ArticleController {
     }
   }
 
-  
+  /*
   @Get(':articleId/download-pdf')
   @ApiParam({ name: 'articleId', type: 'number' })
   async downloadPdf(
@@ -355,6 +355,6 @@ export class ArticleController {
       res.status(500).send('Erreur lors de la génération du PDF.');
     }
   }
-
+*/
   
 }

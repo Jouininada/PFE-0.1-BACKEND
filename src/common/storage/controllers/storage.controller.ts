@@ -15,7 +15,8 @@ import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { IQueryObject } from 'src/common/database/interfaces/database-query-options.interface';
 import { StorageService } from '../services/storage.service';
 import { UploadEntity } from '../repositories/entities/upload.entity';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { StorageBadRequestException } from '../errors/storage.bad-request.error';
 
 @ApiTags('storage')
 @Controller({
@@ -79,21 +80,17 @@ export class StorageController {
       },
     },
   })
-
-  
   @Post('upload')
-@UseInterceptors(FileInterceptor('file', {
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10 Mo
-  },
-}))
-async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<UploadEntity> {
-  console.log('File received:', file); // Log le fichier reçu
-  if (!file) {
-    throw new BadRequestException('No file uploaded.');
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<UploadEntity> {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+
+    // Enregistrez le fichier dans la base de données
+    return this.storageService.store(file);
   }
-  return this.storageService.store(file);
-}
+
   @Get('/file/slug/:slug')
   async downloadFileBySlug(
     @Param('slug') slug: string,

@@ -126,6 +126,7 @@ export class ExpensQuotationService {
   
       await this.interlocutorService.findOneById(createQuotationDto.interlocutorId);
       console.log('Articles received:', createQuotationDto.articleQuotationEntries);
+  
       // Valider les articles
       if (!createQuotationDto.articleQuotationEntries?.length) {
         throw new Error('No article entries provided');
@@ -184,7 +185,7 @@ export class ExpensQuotationService {
       );
   
       // Gérer le numéro séquentiel
-      const sequentialNumbr = createQuotationDto.sequentialNumbr || await this.generateSequentialNumber();
+      const sequentialNumbr = createQuotationDto.sequentialNumbr || null;
       console.log('Sequential Number (Backend):', sequentialNumbr);
   
       // Vérifier le format du numéro séquentiel
@@ -242,17 +243,6 @@ export class ExpensQuotationService {
       console.error('Error saving quotation:', error);
       throw new Error(`Failed to save quotation: ${error.message}`);
     }
-  }
-  private async generateSequentialNumber(): Promise<string> {
-    const lastQuotation = await this.expensequotationRepository.findOne({
-      order: { id: 'DESC' },
-    });
-  
-    const lastNumber = lastQuotation?.sequentialNumbr
-      ? parseInt(lastQuotation.sequentialNumbr.split('-')[1], 10)
-      : 0;
-  
-    return `QUO-${lastNumber + 1}`;
   }
 
   
