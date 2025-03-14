@@ -181,43 +181,40 @@ export class QueryBuilder {
     const orArray = filterString.split(
       `${this.options.LOOKUP_DELIMITER}${this.options.OR}${this.options.LOOKUP_DELIMITER}`,
     );
-  
+
     orArray.forEach((item) => {
       let obj = {};
       const conditions = item.split(this.options.CONDITION_DELIMITER);
-  
+
       conditions.forEach((condition) => {
         const [field, task, value] = condition.split(this.options.LOOKUP_DELIMITER);
-  
-        // Valider les champs et la tâche
+
         if (!field || !task) {
           throw new Error('Condition de filtre invalide : champ ou tâche manquant.');
         }
-  
-        // Valider la valeur
+
         if (value === 'NaN' || value === 'undefined' || value === 'null') {
           throw new Error(`Valeur de filtre invalide : ${value}. La valeur doit être un nombre ou une chaîne valide.`);
         }
-  
+
         let notOperator = false;
         let modifiedTask = task;
         if (task.startsWith(this.options.NOT)) {
           notOperator = true;
           modifiedTask = task.slice(this.options.NOT.length);
         }
-  
+
         obj = {
           ...obj,
           ...this.createWhereObject(field, modifiedTask, value, notOperator),
         };
       });
-  
+
       queryToAdd.push(obj);
     });
-  
+
     return queryToAdd;
   }
-
 
   /**
    * Assigne une clé à un objet de manière récursive.
@@ -240,65 +237,65 @@ export class QueryBuilder {
   }
 
   private createWhereObject(
-  field: string,
-  task: string,
-  value: string,
-  notOperator: boolean,
-): ILooseObject {
-  const obj: ILooseObject = {};
-  let condition;
+    field: string,
+    task: string,
+    value: string,
+    notOperator: boolean,
+  ): ILooseObject {
+    const obj: ILooseObject = {};
+    let condition;
 
-  // Valider la valeur avant de l'utiliser
-  if (value === 'NaN' || value === 'undefined' || value === 'null') {
-    throw new Error(`Valeur de filtre invalide : ${value}. La valeur doit être un nombre ou une chaîne valide.`);
+    // Valider la valeur avant de l'utiliser
+    if (value === 'NaN' || value === 'undefined' || value === 'null') {
+      throw new Error(`Valeur de filtre invalide : ${value}. La valeur doit être un nombre ou une chaîne valide.`);
+    }
+
+    switch (task) {
+      case this.options.EXACT:
+        condition = value;
+        break;
+      case this.options.CONTAINS:
+        condition = Like(`%${value}%`);
+        break;
+      case this.options.STARTS_WITH:
+        condition = Like(`${value}%`);
+        break;
+      case this.options.ENDS_WITH:
+        condition = Like(`%${value}`);
+        break;
+      case this.options.IS_NULL:
+        condition = IsNull();
+        break;
+      case this.options.LT:
+        condition = LessThan(this.parseDateOrNumber(value));
+        break;
+      case this.options.LTE:
+        condition = LessThanOrEqual(this.parseDateOrNumber(value));
+        break;
+      case this.options.GT:
+        condition = MoreThan(this.parseDateOrNumber(value));
+        break;
+      case this.options.GTE:
+        condition = MoreThanOrEqual(this.parseDateOrNumber(value));
+        break;
+      case this.options.IN:
+        condition = In(value.split(this.options.VALUE_DELIMITER));
+        break;
+      case this.options.BETWEEN:
+        const [start, end] = value.split(this.options.VALUE_DELIMITER);
+        condition = Between(this.parseDateOrNumber(start), this.parseDateOrNumber(end));
+        break;
+      default:
+        throw new Error(`Tâche de filtrage non supportée : ${task}`);
+    }
+
+    if (notOperator) {
+      condition = Not(condition);
+    }
+
+    this.assignObjectKey(obj, field, condition);
+    return obj;
   }
-
-  switch (task) {
-    case this.options.EXACT:
-      condition = value;
-      break;
-    case this.options.CONTAINS:
-      condition = Like(`%${value}%`);
-      break;
-    case this.options.STARTS_WITH:
-      condition = Like(`${value}%`);
-      break;
-    case this.options.ENDS_WITH:
-      condition = Like(`%${value}`);
-      break;
-    case this.options.IS_NULL:
-      condition = IsNull();
-      break;
-    case this.options.LT:
-      condition = LessThan(this.parseDateOrNumber(value));
-      break;
-    case this.options.LTE:
-      condition = LessThanOrEqual(this.parseDateOrNumber(value));
-      break;
-    case this.options.GT:
-      condition = MoreThan(this.parseDateOrNumber(value));
-      break;
-    case this.options.GTE:
-      condition = MoreThanOrEqual(this.parseDateOrNumber(value));
-      break;
-    case this.options.IN:
-      condition = In(value.split(this.options.VALUE_DELIMITER));
-      break;
-    case this.options.BETWEEN:
-      const [start, end] = value.split(this.options.VALUE_DELIMITER);
-      condition = Between(this.parseDateOrNumber(start), this.parseDateOrNumber(end));
-      break;
-    default:
-      throw new Error(`Tâche de filtrage non supportée : ${task}`);
-  }
-
-  if (notOperator) {
-    condition = Not(condition);
-  }
-
-  this.assignObjectKey(obj, field, condition);
-  return obj;
-}
 
   /**
    * Parse une valeur en date ou en nombre.
@@ -310,18 +307,18 @@ export class QueryBuilder {
     if (value === 'NaN' || value === 'undefined' || value === 'null') {
       throw new Error(`Valeur invalide pour la date ou le nombre : ${value}`);
     }
-  
+
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     const datetimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-  
+
     if (dateRegex.test(value)) return new Date(value);
     if (datetimeRegex.test(value)) return new Date(value);
-  
+
     const parsedNumber = parseInt(value, 10);
     if (isNaN(parsedNumber)) {
       throw new Error(`Valeur invalide pour la date ou le nombre : ${value}`);
     }
-  
+
     return parsedNumber;
   }
 }

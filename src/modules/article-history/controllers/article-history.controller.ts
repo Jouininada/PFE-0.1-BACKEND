@@ -48,19 +48,22 @@ export class ArticleHistoryController {
   }
 
   @Get(':articleId/generate-files')
-  async generateVersionFiles(@Param('articleId') articleId: number): Promise<string> {
-    try {
-      // Récupérer l'article actuel
-      const article = await this.articleService.findOneById(articleId);
-      if (!article) {
-        throw new NotFoundException('Article non trouvé.');
-      }
-
-      // Générer les fichiers pour cet article
-      return await this.articleHistoryService.generateVersionFile(article);
-    } catch (error) {
-      throw new NotFoundException(error.message);
+@ApiParam({ name: 'articleId', type: 'number' })
+@ApiResponse({ status: 200, description: 'Fichiers PDF générés avec succès.', type: [String] })
+async generateVersionFiles(@Param('articleId') articleId: number): Promise<string[]> {
+  try {
+    // Récupérer l'article actuel
+    const article = await this.articleService.findOneById(articleId);
+    if (!article) {
+      throw new NotFoundException('Article non trouvé.');
     }
+
+    const pdfFilePaths = await this.articleHistoryService.generateVersionFile(article);
+    return Array.isArray(pdfFilePaths) ? pdfFilePaths : [pdfFilePaths];
+    
+  } catch (error) {
+    throw new NotFoundException(error.message);
   }
+}
 
 }
