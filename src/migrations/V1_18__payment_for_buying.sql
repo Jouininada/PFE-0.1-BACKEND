@@ -1,3 +1,5 @@
+-- Table expense_payment
+-- Table expense_payment
 CREATE TABLE IF NOT EXISTS `expense_payment` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `amountPaid` DECIMAL(10,2) NOT NULL DEFAULT '0.00',
@@ -11,29 +13,32 @@ CREATE TABLE IF NOT EXISTS `expense_payment` (
         'payment.payment_mode.bank_transfer',
         'payment.payment_mode.wire_transfer'
     ) DEFAULT NULL,
-    `currencyId` INT NOT NULL,
-    `firmId` INT NOT NULL,
-    `notes` VARCHAR(1024) DEFAULT NULL,
-    `createdAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    `updatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deletedAt` TIMESTAMP NULL DEFAULT NULL,
-    `isDeletionRestricted` TINYINT(1) DEFAULT '0',
+    `currencyId` int DEFAULT NULL,
+    `firmId` int DEFAULT NULL,
+    `notes` varchar(1024) DEFAULT NULL,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
+    `pdfFileId` int DEFAULT NULL,
+    `sequentialNumbr` varchar(25) DEFAULT NULL,
+    `sequential` varchar(25) DEFAULT NULL, -- Nouvelle colonne ajoutée
     PRIMARY KEY (`id`),
-    KEY `FK_firm_payment` (`firmId`),
-    KEY `FK_currency_payment` (`currencyId`),
-    CONSTRAINT `FK_firm_payment` FOREIGN KEY (`firmId`) REFERENCES `firm` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `FK_currency_payment` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`id`) ON DELETE CASCADE
+    KEY `FK_firm_expense_payment` (`firmId`),
+    KEY `FK_currency_expense_payment` (`currencyId`),
+    CONSTRAINT `FK_expense_payment_currency` FOREIGN KEY (`currencyId`) REFERENCES `currency` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `FK_expense_payment_firm` FOREIGN KEY (`firmId`) REFERENCES `firm` (`id`) ON DELETE CASCADE
 );
 
 
 CREATE TABLE IF NOT EXISTS `expense_payment_upload` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `expensePaymentId` INT DEFAULT NULL,
-    `uploadId` INT DEFAULT NULL,
-    `createdAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    `updatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deletedAt` TIMESTAMP NULL DEFAULT NULL,
-    `isDeletionRestricted` TINYINT(1) DEFAULT '0',
+    `id` int NOT NULL AUTO_INCREMENT,
+    `expensePaymentId` int DEFAULT NULL,
+    `uploadId` int DEFAULT NULL,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `FK_expense_payment_expense_payment_upload` (`expensePaymentId`),
     KEY `FK_upload_expense_payment_upload` (`uploadId`),
@@ -43,14 +48,14 @@ CREATE TABLE IF NOT EXISTS `expense_payment_upload` (
 
 
 CREATE TABLE IF NOT EXISTS `expense_payment_invoice_entry` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `paymentId` INT DEFAULT NULL,
-    `expenseInvoiceId` INT DEFAULT NULL,
-    `amountPaid` FLOAT DEFAULT NULL,
-    `createdAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    `updatedAt` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deletedAt` TIMESTAMP NULL DEFAULT NULL,
-    `isDeletionRestricted` TINYINT(1) DEFAULT '0',
+    `id` int NOT NULL AUTO_INCREMENT,
+    `expensePaymentId` int DEFAULT NULL,
+    `expenseInvoiceId` int DEFAULT NULL,
+    `amount` float DEFAULT NULL,
+    `createdAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    `deletedAt` timestamp NULL DEFAULT NULL,
+    `isDeletionRestricted` tinyint(1) DEFAULT '0',
     PRIMARY KEY (`id`),
     KEY `FK_expense_payment_expense_payment_invoice_entry` (`paymentId`),
     KEY `FK_expense_invoice_expense_payment_invoice_entry` (`expenseInvoiceId`),
@@ -63,7 +68,10 @@ CREATE TABLE IF NOT EXISTS `expense_payment_invoice_entry` (
 ALTER TABLE `expense_invoice`
 ADD COLUMN `amountPaid` float DEFAULT 0;
 
-ALTER TABLE `expense_invoice` MODIFY `status` ENUM (
+ALTER TABLE `expense_invoice`
+MODIFY COLUMN `status` ENUM (
+ALTER TABLE `expense_invoice`
+MODIFY COLUMN `status` ENUM (
     'invoice.status.non_existent',
     'invoice.status.draft',
     'invoice.status.sent',

@@ -8,8 +8,4 @@ export class CreateExpensQuotationUploadDto {
     type: Number,
   })
   uploadId?: number;
-
-  @IsOptional()
-  @IsNumber()
-  pdfFileId?: number;
 }

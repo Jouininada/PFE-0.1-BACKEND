@@ -4,6 +4,7 @@ import {
     ManyToOne,
     JoinColumn,
     Column,
+    OneToOne,
   } from 'typeorm';
   import { EntityHelper } from 'src/common/database/interfaces/database.entity.interface';
   import { UploadEntity } from 'src/common/storage/repositories/entities/upload.entity';
@@ -27,6 +28,5 @@ export class ExpenseInvoiceUploadEntity extends EntityHelper {
 
   @Column({ type: 'int' })
   uploadId: number;
-  @Column({ type: 'int' })
-  filePath: number;
+
 }

@@ -7,10 +7,4 @@ export class ExpenseCreateInvoiceUploadDto {
     type: Number,
   })
   uploadId?: number;
-
-   @ApiProperty({
-    example: 1,
-    type: Number,
-  })
-  filePath?: number;
 }
